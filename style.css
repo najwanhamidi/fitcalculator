@@ -183,19 +183,111 @@ body {
   margin-top: 4px;
 }
 
+/* Step 1: Dual File Pickers */
+.dual-file-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .dual-file-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.file-picker-box {
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+
+.file-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.file-picker-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag-required {
+  font-size: 10px;
+  color: var(--accent-blue);
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.tag-optional {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.dropzone.small-dropzone {
+  padding: 14px 10px;
+}
+
+.dropzone.small-dropzone .dropzone-icon {
+  font-size: 26px;
+  margin-bottom: 2px;
+}
+
+.dropzone.small-dropzone .dropzone-text {
+  font-size: 13px;
+}
+
+.dropzone.small-dropzone .dropzone-hint {
+  font-size: 10px;
+}
+
+/* Sync Banner */
+.sync-banner-card {
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.sync-banner-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  margin-bottom: 6px;
+}
+
+.phases-pill {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.15);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
 .file-status-box {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: var(--radius-md);
-  padding: 12px;
-  margin-top: 10px;
+  padding: 10px;
+  margin-top: 8px;
 }
 
 .file-info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .file-name {
@@ -853,3 +945,104 @@ button:active {
 .mt-3 { margin-top: 12px; }
 .mb-2 { margin-bottom: 8px; }
 .mb-3 { margin-bottom: 12px; }
+
+/* Dual Time (Min & Sec) and Distance Box */
+.dual-time-dist-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  width: 100%;
+}
+
+.minsec-inputs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.minsec-inputs input {
+  width: 36px;
+  text-align: center;
+  padding: 4px 2px;
+  font-size: 13px;
+  background: var(--bg-input, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-main, #f8fafc);
+}
+
+.minsec-inputs span {
+  font-size: 11px;
+  color: var(--text-dim, #94a3b8);
+  font-weight: 500;
+}
+
+.dual-pace-divider {
+  color: var(--accent-blue, #38bdf8);
+  font-size: 12px;
+  user-select: none;
+  padding: 0 2px;
+}
+
+.dist-input-box {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dist-input-box input {
+  width: 48px;
+  text-align: center;
+  padding: 4px 2px;
+  font-size: 13px;
+  background: var(--bg-input, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--accent-blue, #38bdf8);
+  font-weight: 600;
+}
+
+.dist-input-box span {
+  font-size: 11px;
+  color: var(--text-dim, #94a3b8);
+  font-weight: 500;
+}
+
+/* Radio Pill Group */
+.radio-pill-group {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.radio-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim, #94a3b8);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.radio-pill input[type="radio"] {
+  display: none;
+}
+
+.radio-pill.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent-blue, #38bdf8);
+  color: var(--accent-blue, #38bdf8);
+  font-weight: 600;
+}

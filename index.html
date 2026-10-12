@@ -152,13 +152,41 @@
           <button type="button" class="preset-chip" data-preset="3">5×6m @ 14.2 (12.1km)</button>
         </div>
 
+        <!-- Calculation Mode Selector -->
+        <div class="input-group mb-2">
+          <label style="font-weight: 600; font-size: 12px;">Calculate Intervals By:</label>
+          <div class="radio-pill-group">
+            <label class="radio-pill active" id="pill-repeats-dur">
+              <input type="radio" name="repeats-calc-mode" value="duration" checked>
+              <span>⏱️ Duration (Min &amp; Sec)</span>
+            </label>
+            <label class="radio-pill" id="pill-repeats-dist">
+              <input type="radio" name="repeats-calc-mode" value="distance">
+              <span>📏 Distance (km)</span>
+            </label>
+          </div>
+        </div>
+
         <!-- 1. Warm Up -->
         <div class="form-block block-warmup">
           <h3 class="block-title">🔵 1. Warm Up</h3>
           <div class="form-row-2">
             <div class="input-group">
-              <label>Duration (min)</label>
-              <input type="number" id="wu-dur" value="14" step="0.5" min="0" inputmode="decimal">
+              <label>Time &amp; Distance</label>
+              <div class="dual-time-dist-box">
+                <div class="minsec-inputs">
+                  <input type="number" id="wu-min" value="14" min="0" placeholder="min" inputmode="numeric">
+                  <span>m</span>
+                  <input type="number" id="wu-sec" value="0" min="0" max="59" placeholder="sec" inputmode="numeric">
+                  <span>s</span>
+                </div>
+                <div class="dual-pace-divider">⇄</div>
+                <div class="dist-input-box">
+                  <input type="number" id="wu-dist" value="2.47" step="0.01" min="0" inputmode="decimal">
+                  <span>km</span>
+                </div>
+              </div>
+              <input type="hidden" id="wu-dur" value="14">
             </div>
             <div class="input-group">
               <label>Speed (km/h)</label>
@@ -186,17 +214,32 @@
 
           <div class="sub-block">
             <span class="sub-block-badge active-badge">Work Interval (per set)</span>
-            <div class="form-row-3">
+            <div class="form-row-2">
               <div class="input-group">
-                <label>Time (min)</label>
-                <input type="number" id="int-dur" value="10" step="0.5" inputmode="decimal">
+                <label>Time &amp; Distance</label>
+                <div class="dual-time-dist-box">
+                  <div class="minsec-inputs">
+                    <input type="number" id="int-min" value="10" min="0" placeholder="min" inputmode="numeric">
+                    <span>m</span>
+                    <input type="number" id="int-sec" value="0" min="0" max="59" placeholder="sec" inputmode="numeric">
+                    <span>s</span>
+                  </div>
+                  <div class="dual-pace-divider">⇄</div>
+                  <div class="dist-input-box">
+                    <input type="number" id="int-dist" value="2.28" step="0.01" min="0" inputmode="decimal">
+                    <span>km</span>
+                  </div>
+                </div>
+                <input type="hidden" id="int-dur" value="10">
               </div>
               <div class="input-group">
-                <label>km/h</label>
+                <label>Speed (km/h)</label>
                 <input type="number" id="int-kmh" value="13.7" step="0.1" inputmode="decimal">
               </div>
+            </div>
+            <div class="form-row-2 mt-2">
               <div class="input-group">
-                <label>min/km</label>
+                <label>Pace (min/km)</label>
                 <input type="text" id="int-pace" value="4:23" placeholder="4:23">
               </div>
             </div>
@@ -204,17 +247,32 @@
 
           <div class="sub-block mt-2">
             <span class="sub-block-badge rest-badge">Recovery (per set)</span>
-            <div class="form-row-3">
+            <div class="form-row-2">
               <div class="input-group">
-                <label>Time (min)</label>
-                <input type="number" id="rec-dur" value="2" step="0.1" inputmode="decimal">
+                <label>Time &amp; Distance</label>
+                <div class="dual-time-dist-box">
+                  <div class="minsec-inputs">
+                    <input type="number" id="rec-min" value="2" min="0" placeholder="min" inputmode="numeric">
+                    <span>m</span>
+                    <input type="number" id="rec-sec" value="0" min="0" max="59" placeholder="sec" inputmode="numeric">
+                    <span>s</span>
+                  </div>
+                  <div class="dual-pace-divider">⇄</div>
+                  <div class="dist-input-box">
+                    <input type="number" id="rec-dist" value="0.19" step="0.01" min="0" inputmode="decimal">
+                    <span>km</span>
+                  </div>
+                </div>
+                <input type="hidden" id="rec-dur" value="2">
               </div>
               <div class="input-group">
-                <label>km/h</label>
+                <label>Speed (km/h)</label>
                 <input type="number" id="rec-kmh" value="5.7" step="0.1" inputmode="decimal">
               </div>
+            </div>
+            <div class="form-row-2 mt-2">
               <div class="input-group">
-                <label>min/km</label>
+                <label>Pace (min/km)</label>
                 <input type="text" id="rec-pace" value="10:32" placeholder="10:32">
               </div>
             </div>
@@ -250,18 +308,38 @@
           </div>
 
           <div id="cd-manual-group" class="input-group mt-2 hidden">
-            <label>Manual Cool Down Time (min)</label>
-            <input type="number" id="cd-manual-dur" value="12" step="0.5" inputmode="decimal">
+            <label>Manual Cool Down Time &amp; Distance</label>
+            <div class="dual-time-dist-box">
+              <div class="minsec-inputs">
+                <input type="number" id="cd-manual-min" value="12" min="0" placeholder="min" inputmode="numeric">
+                <span>m</span>
+                <input type="number" id="cd-manual-sec" value="0" min="0" max="59" placeholder="sec" inputmode="numeric">
+                <span>s</span>
+              </div>
+              <div class="dual-pace-divider">⇄</div>
+              <div class="dist-input-box">
+                <input type="number" id="cd-manual-dist" value="2.12" step="0.01" min="0" inputmode="decimal">
+                <span>km</span>
+              </div>
+            </div>
+            <input type="hidden" id="cd-manual-dur" value="12">
           </div>
         </div>
       </div>
 
       <!-- TAB 2: Manual Segments Form -->
       <div id="segments-pane" class="tab-pane hidden">
-        <div class="segments-top-bar">
-          <div class="input-group" style="flex: 1;">
+        <div class="segments-top-bar" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div class="input-group" style="flex: 1; min-width: 140px;">
             <label>Target Total Distance (km)</label>
             <input type="number" id="seg-target-dist" value="12.0" step="0.01" inputmode="decimal">
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 160px;">
+            <label>Calculate Segments By</label>
+            <select id="seg-calc-mode">
+              <option value="duration" selected>⏱️ Duration (Min &amp; Sec)</option>
+              <option value="distance">📏 Distance (km)</option>
+            </select>
           </div>
         </div>
 

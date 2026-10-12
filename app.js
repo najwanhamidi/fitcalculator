@@ -3,6 +3,7 @@
  * Optimized for Safari on iPhone 15 Pro Max & GitHub Pages
  * Handles file loading, pace syncing, segment editing, live timeline,
  * workout processing, iOS Share Sheet, and LocalStorage profiles.
+ * Supports Duration (Min & Sec) and Distance calculation modes across all phases.
  */
 
 (function () {
@@ -18,41 +19,58 @@
     decodedQ: null,
     syncData: null,
     workoutMode: 'repeats', // 'repeats' or 'custom_segments'
+    repeatsCalcMode: 'duration', // 'duration' or 'distance'
+    segCalcMode: 'duration', // 'duration' or 'distance'
     customSegments: [
-      { id: 1, name: "Warm Up", durationMin: 14, speedKmh: 10.6, paceStr: "5:40", intensity: "Active", autoCalc: false },
-      { id: 2, name: "Interval 1", durationMin: 10, speedKmh: 13.7, paceStr: "4:23", intensity: "Active", autoCalc: false },
-      { id: 3, name: "Recovery 1", durationMin: 2, speedKmh: 5.7, paceStr: "10:32", intensity: "Resting", autoCalc: false },
-      { id: 4, name: "Interval 2", durationMin: 10, speedKmh: 13.7, paceStr: "4:23", intensity: "Active", autoCalc: false },
-      { id: 5, name: "Recovery 2", durationMin: 2, speedKmh: 5.7, paceStr: "10:32", intensity: "Resting", autoCalc: false },
-      { id: 6, name: "Cool Down", durationMin: 0, speedKmh: 10.6, paceStr: "5:40", intensity: "Active", autoCalc: true }
+      { id: 1, name: "Warm Up", min: 14, sec: 0, durationMin: 14.0, speedKmh: 10.6, paceStr: "5:40", distKm: 2.47, intensity: "Active", autoCalc: false },
+      { id: 2, name: "Interval 1", min: 10, sec: 0, durationMin: 10.0, speedKmh: 13.7, paceStr: "4:23", distKm: 2.28, intensity: "Active", autoCalc: false },
+      { id: 3, name: "Recovery 1", min: 2, sec: 0, durationMin: 2.0, speedKmh: 5.7, paceStr: "10:32", distKm: 0.19, intensity: "Resting", autoCalc: false },
+      { id: 4, name: "Interval 2", min: 10, sec: 0, durationMin: 10.0, speedKmh: 13.7, paceStr: "4:23", distKm: 2.28, intensity: "Active", autoCalc: false },
+      { id: 5, name: "Recovery 2", min: 2, sec: 0, durationMin: 2.0, speedKmh: 5.7, paceStr: "10:32", distKm: 0.19, intensity: "Resting", autoCalc: false },
+      { id: 6, name: "Cool Down", min: 0, sec: 0, durationMin: 0.0, speedKmh: 10.6, paceStr: "5:40", distKm: 0.0, intensity: "Active", autoCalc: true }
     ],
     generatedOutputs: null
   };
+
+  // --- Duration Helpers ---
+  function parseMinSecToSec(min, sec) {
+    const m = parseInt(min, 10) || 0;
+    const s = parseInt(sec, 10) || 0;
+    return Math.max(0, m * 60 + s);
+  }
+
+  function secToMinSec(totalSec) {
+    const tot = Math.max(0, Math.round(totalSec));
+    return {
+      min: Math.floor(tot / 60),
+      sec: tot % 60
+    };
+  }
 
   // --- Presets ---
   const PRESETS = [
     {
       name: '3×10m @ 13.7 (12km)',
-      wuMin: 14, wuKmh: 10.6,
-      repeats: 3, intMin: 10, intKmh: 13.7, recMin: 2, recKmh: 5.7,
+      wuMin: 14, wuSec: 0, wuKmh: 10.6,
+      repeats: 3, intMin: 10, intSec: 0, intKmh: 13.7, recMin: 2, recSec: 0, recKmh: 5.7,
       cdKmh: 10.6, targetDistKm: 12.0
     },
     {
       name: '5×3m @ 14.2 (8.4km)',
-      wuMin: 13, wuKmh: 10.6,
-      repeats: 5, intMin: 3, intKmh: 14.2, recMin: 1, recKmh: 5.7,
+      wuMin: 13, wuSec: 0, wuKmh: 10.6,
+      repeats: 5, intMin: 3, intSec: 0, intKmh: 14.2, recMin: 1, recSec: 0, recKmh: 5.7,
       cdKmh: 10.6, targetDistKm: 8.44
     },
     {
       name: '3×5m @ 13.7 (8.4km)',
-      wuMin: 14, wuKmh: 10.6,
-      repeats: 3, intMin: 5, intKmh: 13.7, recMin: 1.333, recKmh: 5.7,
+      wuMin: 14, wuSec: 0, wuKmh: 10.6,
+      repeats: 3, intMin: 5, intSec: 0, intKmh: 13.7, recMin: 1, recSec: 20, recKmh: 5.7,
       cdKmh: 10.6, targetDistKm: 8.42
     },
     {
       name: '5×6m @ 14.2 (12.1km)',
-      wuMin: 13, wuKmh: 10.6,
-      repeats: 5, intMin: 6, intKmh: 14.2, recMin: 1.5, recKmh: 5.7,
+      wuMin: 13, wuSec: 0, wuKmh: 10.6,
+      repeats: 5, intMin: 6, intSec: 0, intKmh: 14.2, recMin: 1, recSec: 30, recKmh: 5.7,
       cdKmh: 10.6, targetDistKm: 12.09
     }
   ];
@@ -94,26 +112,46 @@
   const segmentsPane = document.getElementById('segments-pane');
 
   // Repeats Inputs
+  const pillRepeatsDur = document.getElementById('pill-repeats-dur');
+  const pillRepeatsDist = document.getElementById('pill-repeats-dist');
+
+  const wuMinIn = document.getElementById('wu-min');
+  const wuSecIn = document.getElementById('wu-sec');
+  const wuDistIn = document.getElementById('wu-dist');
   const wuDurIn = document.getElementById('wu-dur');
   const wuKmhIn = document.getElementById('wu-kmh');
   const wuPaceIn = document.getElementById('wu-pace');
   const wuDistEst = document.getElementById('wu-dist-est');
+
   const repCountIn = document.getElementById('rep-count');
+
+  const intMinIn = document.getElementById('int-min');
+  const intSecIn = document.getElementById('int-sec');
+  const intDistIn = document.getElementById('int-dist');
   const intDurIn = document.getElementById('int-dur');
   const intKmhIn = document.getElementById('int-kmh');
   const intPaceIn = document.getElementById('int-pace');
+
+  const recMinIn = document.getElementById('rec-min');
+  const recSecIn = document.getElementById('rec-sec');
+  const recDistIn = document.getElementById('rec-dist');
   const recDurIn = document.getElementById('rec-dur');
   const recKmhIn = document.getElementById('rec-kmh');
   const recPaceIn = document.getElementById('rec-pace');
+
   const cdKmhIn = document.getElementById('cd-kmh');
   const cdPaceIn = document.getElementById('cd-pace');
   const targetDistIn = document.getElementById('target-dist');
   const cdModeSelect = document.getElementById('cd-mode-select');
   const cdManualGroup = document.getElementById('cd-manual-group');
+  const cdManualMinIn = document.getElementById('cd-manual-min');
+  const cdManualSecIn = document.getElementById('cd-manual-sec');
+  const cdManualDistIn = document.getElementById('cd-manual-dist');
   const cdManualDurIn = document.getElementById('cd-manual-dur');
 
   // Segments Inputs
   const segTargetDistIn = document.getElementById('seg-target-dist');
+  const segCalcModeSelect = document.getElementById('seg-calc-mode');
   const addSegmentBtn = document.getElementById('add-segment-btn');
   const addPairBtn = document.getElementById('add-pair-btn');
   const progressionBtn = document.getElementById('progression-btn');
@@ -178,6 +216,7 @@
   function init() {
     setupFileHandlers();
     setupDualPaceBindings();
+    setupStepTimeAndDistBindings();
     setupPresets();
     setupModeSwitch();
     setupSegmentsManager();
@@ -385,10 +424,17 @@
           name = `Interval ${Math.ceil(idx / 2)}`;
         }
 
+        const durSec = p.duration_sec || Math.round((p.duration_min || 0) * 60);
+        const ms = secToMinSec(durSec);
+        const dist = parseFloat(((durSec * p.speed_ms) / 1000.0).toFixed(2));
+
         return {
           id: idx + 1,
           name: name,
+          min: ms.min,
+          sec: ms.sec,
           durationMin: p.duration_min,
+          distKm: dist,
           speedKmh: p.speed_kmh,
           paceStr: p.pace_str || FitEngine.kmhToPaceStr(p.speed_kmh),
           intensity: intensity,
@@ -408,20 +454,35 @@
     } else {
       // Structured repeats mode
       const wu = phases[0];
-      wuDurIn.value = wu.duration_min;
+      const wuSec = wu.duration_sec || Math.round((wu.duration_min || 0) * 60);
+      const wuMs = secToMinSec(wuSec);
+      wuMinIn.value = wuMs.min;
+      wuSecIn.value = wuMs.sec;
+      wuDurIn.value = (wuSec / 60.0).toFixed(2);
       wuKmhIn.value = wu.speed_kmh;
       wuPaceIn.value = FitEngine.kmhToPaceStr(wu.speed_kmh);
+      wuDistIn.value = ((wuSec * wu.speed_kmh) / 3600.0).toFixed(2);
 
       if (phases.length >= 3) {
         const intP = phases[1];
         const recP = phases[2];
-        intDurIn.value = intP.duration_min;
+        const intSec = intP.duration_sec || Math.round((intP.duration_min || 0) * 60);
+        const intMs = secToMinSec(intSec);
+        intMinIn.value = intMs.min;
+        intSecIn.value = intMs.sec;
+        intDurIn.value = (intSec / 60.0).toFixed(2);
         intKmhIn.value = intP.speed_kmh;
         intPaceIn.value = FitEngine.kmhToPaceStr(intP.speed_kmh);
+        intDistIn.value = ((intSec * intP.speed_kmh) / 3600.0).toFixed(2);
 
-        recDurIn.value = recP.duration_min;
+        const recSec = recP.duration_sec || Math.round((recP.duration_min || 0) * 60);
+        const recMs = secToMinSec(recSec);
+        recMinIn.value = recMs.min;
+        recSecIn.value = recMs.sec;
+        recDurIn.value = (recSec / 60.0).toFixed(2);
         recKmhIn.value = recP.speed_kmh;
         recPaceIn.value = FitEngine.kmhToPaceStr(recP.speed_kmh);
+        recDistIn.value = ((recSec * recP.speed_kmh) / 3600.0).toFixed(2);
 
         const repCount = Math.floor((phases.length - 2) / 2);
         repCountIn.value = Math.max(1, repCount);
@@ -441,11 +502,6 @@
     updateWorkoutPreview();
     alert(`⚡ Successfully populated ${phases.length} intervals and speeds directly from Q.fit!`);
   }
-      }
-    };
-
-    reader.readAsArrayBuffer(file);
-  }
 
   // --- 2-Way Pace Sync Helpers ---
   function bindPacePair(kmhIn, paceIn) {
@@ -461,7 +517,7 @@
         const kmh = FitEngine.paceStrToKmh(p);
         if (kmh > 0) {
           kmhIn.value = kmh;
-          updateWorkoutPreview();
+          kmhIn.dispatchEvent(new Event('input'));
         }
       }
     });
@@ -473,17 +529,82 @@
     bindPacePair(recKmhIn, recPaceIn);
     bindPacePair(cdKmhIn, cdPaceIn);
 
-    wuDurIn.addEventListener('input', updateWorkoutPreview);
-    repCountIn.addEventListener('input', updateWorkoutPreview);
-    intDurIn.addEventListener('input', updateWorkoutPreview);
-    recDurIn.addEventListener('input', updateWorkoutPreview);
     targetDistIn.addEventListener('input', updateWorkoutPreview);
+    repCountIn.addEventListener('input', updateWorkoutPreview);
+
     cdModeSelect.addEventListener('change', () => {
       const isManual = cdModeSelect.value === 'manual';
       cdManualGroup.classList.toggle('hidden', !isManual);
       updateWorkoutPreview();
     });
-    cdManualDurIn.addEventListener('input', updateWorkoutPreview);
+  }
+
+  // --- Live Two-Way Time (Min & Sec) <-> Distance Bindings for Repeats ---
+  function bindStepTimeAndDist(minEl, secEl, distEl, durHiddenEl, kmhEl, getCalcMode) {
+    if (!minEl || !secEl || !distEl || !kmhEl) return;
+
+    function updateDistFromTime() {
+      const totalSec = parseMinSecToSec(minEl.value, secEl.value);
+      if (durHiddenEl) durHiddenEl.value = (totalSec / 60.0).toFixed(2);
+      const kmh = parseFloat(kmhEl.value) || 0;
+      if (kmh > 0) {
+        const dist = (totalSec * kmh) / 3600.0;
+        distEl.value = dist.toFixed(2);
+      }
+      updateWorkoutPreview();
+    }
+
+    function updateTimeFromDist() {
+      const dist = parseFloat(distEl.value) || 0;
+      const kmh = parseFloat(kmhEl.value) || 0;
+      if (kmh > 0 && dist > 0) {
+        const totalSec = Math.round((dist * 3600.0) / kmh);
+        const ms = secToMinSec(totalSec);
+        minEl.value = ms.min;
+        secEl.value = ms.sec;
+        if (durHiddenEl) durHiddenEl.value = (totalSec / 60.0).toFixed(2);
+      }
+      updateWorkoutPreview();
+    }
+
+    minEl.addEventListener('input', updateDistFromTime);
+    secEl.addEventListener('input', updateDistFromTime);
+    distEl.addEventListener('input', updateTimeFromDist);
+
+    kmhEl.addEventListener('input', () => {
+      const mode = getCalcMode ? getCalcMode() : 'duration';
+      if (mode === 'distance') {
+        updateTimeFromDist();
+      } else {
+        updateDistFromTime();
+      }
+    });
+  }
+
+  function setupStepTimeAndDistBindings() {
+    bindStepTimeAndDist(wuMinIn, wuSecIn, wuDistIn, wuDurIn, wuKmhIn, () => state.repeatsCalcMode);
+    bindStepTimeAndDist(intMinIn, intSecIn, intDistIn, intDurIn, intKmhIn, () => state.repeatsCalcMode);
+    bindStepTimeAndDist(recMinIn, recSecIn, recDistIn, recDurIn, recKmhIn, () => state.repeatsCalcMode);
+    bindStepTimeAndDist(cdManualMinIn, cdManualSecIn, cdManualDistIn, cdManualDurIn, cdKmhIn, () => state.repeatsCalcMode);
+
+    // Repeats Calculation Mode Pills
+    const radioCalcModes = document.querySelectorAll('input[name="repeats-calc-mode"]');
+    radioCalcModes.forEach(r => {
+      r.addEventListener('change', (e) => {
+        state.repeatsCalcMode = e.target.value;
+        pillRepeatsDur?.classList.toggle('active', state.repeatsCalcMode === 'duration');
+        pillRepeatsDist?.classList.toggle('active', state.repeatsCalcMode === 'distance');
+        updateWorkoutPreview();
+      });
+    });
+
+    // Custom Segments Mode Select
+    segCalcModeSelect?.addEventListener('change', (e) => {
+      state.segCalcMode = e.target.value;
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+      updateWorkoutPreview();
+    });
   }
 
   // --- Presets ---
@@ -502,18 +623,37 @@
     const p = PRESETS[index];
     if (!p) return;
 
-    wuDurIn.value = p.wuMin;
+    const wuMin = p.wuMin !== undefined ? p.wuMin : 14;
+    const wuSec = p.wuSec !== undefined ? p.wuSec : 0;
+    const wuTotSec = wuMin * 60 + wuSec;
+    wuMinIn.value = wuMin;
+    wuSecIn.value = wuSec;
+    wuDurIn.value = (wuTotSec / 60.0).toFixed(2);
     wuKmhIn.value = p.wuKmh;
     wuPaceIn.value = FitEngine.kmhToPaceStr(p.wuKmh);
+    wuDistIn.value = ((wuTotSec * p.wuKmh) / 3600.0).toFixed(2);
 
     repCountIn.value = p.repeats;
-    intDurIn.value = p.intMin;
+
+    const intMin = p.intMin !== undefined ? p.intMin : 10;
+    const intSec = p.intSec !== undefined ? p.intSec : 0;
+    const intTotSec = intMin * 60 + intSec;
+    intMinIn.value = intMin;
+    intSecIn.value = intSec;
+    intDurIn.value = (intTotSec / 60.0).toFixed(2);
     intKmhIn.value = p.intKmh;
     intPaceIn.value = FitEngine.kmhToPaceStr(p.intKmh);
+    intDistIn.value = ((intTotSec * p.intKmh) / 3600.0).toFixed(2);
 
-    recDurIn.value = p.recMin;
+    const recMin = p.recMin !== undefined ? p.recMin : 2;
+    const recSec = p.recSec !== undefined ? p.recSec : 0;
+    const recTotSec = recMin * 60 + recSec;
+    recMinIn.value = recMin;
+    recSecIn.value = recSec;
+    recDurIn.value = (recTotSec / 60.0).toFixed(2);
     recKmhIn.value = p.recKmh;
     recPaceIn.value = FitEngine.kmhToPaceStr(p.recKmh);
+    recDistIn.value = ((recTotSec * p.recKmh) / 3600.0).toFixed(2);
 
     cdKmhIn.value = p.cdKmh;
     cdPaceIn.value = FitEngine.kmhToPaceStr(p.cdKmh);
@@ -575,9 +715,11 @@
     let priorDistM = 0;
     for (let i = 0; i < num - 1; i++) {
       const s = state.customSegments[i];
-      const durSec = Math.round((s.durationMin || 0) * 60);
+      const durSec = (parseInt(s.min, 10) || 0) * 60 + (parseInt(s.sec, 10) || 0);
       const spdMs = FitEngine.kmhToMs(s.speedKmh || 0);
-      priorDistM += durSec * spdMs;
+      const dM = durSec * spdMs;
+      s.distKm = parseFloat((dM / 1000.0).toFixed(2));
+      priorDistM += dM;
     }
 
     const lastIdx = num - 1;
@@ -589,16 +731,26 @@
     if (lastSeg && lastSeg.autoCalc) {
       const remDistM = Math.max(0, targetDistM - priorDistM);
       bannerRemaining.innerText = `${(remDistM / 1000.0).toFixed(2)} km`;
+      lastSeg.distKm = parseFloat((remDistM / 1000.0).toFixed(2));
 
       const spdMs = FitEngine.kmhToMs(lastSeg.speedKmh || 0);
       if (spdMs > 0 && targetDistM > priorDistM) {
         const durSec = Math.round(remDistM / spdMs);
+        const ms = secToMinSec(durSec);
+        lastSeg.min = ms.min;
+        lastSeg.sec = ms.sec;
         lastSeg.durationMin = parseFloat((durSec / 60.0).toFixed(2));
+      } else {
+        lastSeg.min = 0;
+        lastSeg.sec = 0;
+        lastSeg.durationMin = 0;
       }
     } else {
       if (lastSeg) {
-        const lastDist = Math.round((lastSeg.durationMin || 0) * 60) * FitEngine.kmhToMs(lastSeg.speedKmh || 0);
-        bannerRemaining.innerText = `${(lastDist / 1000.0).toFixed(2)} km`;
+        const durSec = (parseInt(lastSeg.min, 10) || 0) * 60 + (parseInt(lastSeg.sec, 10) || 0);
+        const lastDist = durSec * FitEngine.kmhToMs(lastSeg.speedKmh || 0);
+        lastSeg.distKm = parseFloat((lastDist / 1000.0).toFixed(2));
+        bannerRemaining.innerText = `${lastSeg.distKm.toFixed(2)} km`;
       }
     }
   }
@@ -609,9 +761,16 @@
 
     state.customSegments.forEach((seg, idx) => {
       const isFinal = (idx === num - 1);
-      const durSec = Math.round((seg.durationMin || 0) * 60);
+      if (seg.min === undefined || seg.sec === undefined) {
+        const ms = secToMinSec(Math.round((seg.durationMin || 0) * 60));
+        seg.min = ms.min;
+        seg.sec = ms.sec;
+      }
+      const durSec = (parseInt(seg.min, 10) || 0) * 60 + (parseInt(seg.sec, 10) || 0);
       const spdMs = FitEngine.kmhToMs(seg.speedKmh || 0);
-      const distKm = ((durSec * spdMs) / 1000.0).toFixed(2);
+      if (seg.distKm === undefined) {
+        seg.distKm = parseFloat(((durSec * spdMs) / 1000.0).toFixed(2));
+      }
 
       const card = document.createElement('div');
       card.className = `segment-item-card ${seg.autoCalc ? 'auto-calc-active' : ''}`;
@@ -625,16 +784,25 @@
         </div>
         <div class="seg-inputs-grid">
           <div class="input-group">
-            <label>km/h</label>
+            <label>Speed (km/h)</label>
             <input type="number" class="seg-kmh-in" value="${seg.speedKmh || 0}" step="0.1" inputmode="decimal">
           </div>
           <div class="input-group">
-            <label>min/km</label>
+            <label>Pace (min/km)</label>
             <input type="text" class="seg-pace-in" value="${seg.paceStr || FitEngine.kmhToPaceStr(seg.speedKmh)}" placeholder="4:30">
           </div>
           <div class="input-group">
-            <label>Time (min)</label>
-            <input type="number" class="seg-dur-in" value="${seg.durationMin || 0}" step="0.1" inputmode="decimal" ${seg.autoCalc ? 'disabled title="Auto calculated"' : ''}>
+            <label>Duration</label>
+            <div class="minsec-inputs">
+              <input type="number" class="seg-min-in" value="${seg.min}" min="0" placeholder="min" inputmode="numeric" style="width: 38px;" ${seg.autoCalc ? 'disabled' : ''}>
+              <span>m</span>
+              <input type="number" class="seg-sec-in" value="${seg.sec}" min="0" max="59" placeholder="sec" inputmode="numeric" style="width: 38px;" ${seg.autoCalc ? 'disabled' : ''}>
+              <span>s</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Dist (km)</label>
+            <input type="number" class="seg-dist-in" value="${seg.distKm}" step="0.01" min="0" inputmode="decimal" style="width: 60px;" ${seg.autoCalc ? 'disabled' : ''}>
           </div>
         </div>
         <div class="seg-bottom-row">
@@ -643,10 +811,10 @@
               <option value="Active" ${seg.intensity === 'Active' ? 'selected' : ''}>Active</option>
               <option value="Resting" ${seg.intensity === 'Resting' ? 'selected' : ''}>Resting</option>
             </select>
-            <span class="seg-dist-text">${distKm} km</span>
+            <span class="seg-dist-text">${seg.distKm} km</span>
           </div>
           ${isFinal ? `
-          <label style="display: flex; align-items: center; gap: 4px; color: var(--accent-purple); cursor: pointer;">
+          <label style="display: flex; align-items: center; gap: 4px; color: var(--accent-purple); cursor: pointer; font-size: 12px;">
             <input type="checkbox" class="seg-autocalc-toggle" ${seg.autoCalc ? 'checked' : ''} style="width: 16px; height: 16px;">
             <span>Auto-Calc</span>
           </label>
@@ -658,7 +826,9 @@
       const nameIn = card.querySelector('.seg-name-in');
       const kmhIn = card.querySelector('.seg-kmh-in');
       const paceIn = card.querySelector('.seg-pace-in');
-      const durIn = card.querySelector('.seg-dur-in');
+      const minIn = card.querySelector('.seg-min-in');
+      const secIn = card.querySelector('.seg-sec-in');
+      const distIn = card.querySelector('.seg-dist-in');
       const intIn = card.querySelector('.seg-int-in');
       const delBtn = card.querySelector('.seg-del-btn');
       const autoToggle = card.querySelector('.seg-autocalc-toggle');
@@ -668,13 +838,33 @@
         updateWorkoutPreview();
       });
 
-      kmhIn.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value) || 0;
-        seg.speedKmh = val;
-        seg.paceStr = FitEngine.kmhToPaceStr(val);
+      function onSpeedChange(newKmh) {
+        seg.speedKmh = newKmh;
+        seg.paceStr = FitEngine.kmhToPaceStr(newKmh);
         paceIn.value = seg.paceStr;
+
+        if (state.segCalcMode === 'distance') {
+          if (newKmh > 0 && (seg.distKm || 0) > 0) {
+            const tSec = Math.round((seg.distKm * 3600.0) / newKmh);
+            const ms = secToMinSec(tSec);
+            seg.min = ms.min;
+            seg.sec = ms.sec;
+            seg.durationMin = parseFloat((tSec / 60.0).toFixed(2));
+            minIn.value = ms.min;
+            secIn.value = ms.sec;
+          }
+        } else {
+          const tSec = (parseInt(seg.min, 10) || 0) * 60 + (parseInt(seg.sec, 10) || 0);
+          seg.distKm = parseFloat(((tSec * newKmh) / 3600.0).toFixed(2));
+          distIn.value = seg.distKm;
+        }
         autoCalculateFinalSegment();
         updateWorkoutPreview();
+      }
+
+      kmhIn.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        onSpeedChange(val);
       });
 
       paceIn.addEventListener('input', (e) => {
@@ -682,17 +872,41 @@
         if (str.length >= 3) {
           const kmh = FitEngine.paceStrToKmh(str);
           if (kmh > 0) {
-            seg.speedKmh = kmh;
-            seg.paceStr = str;
             kmhIn.value = kmh;
-            autoCalculateFinalSegment();
-            updateWorkoutPreview();
+            onSpeedChange(kmh);
           }
         }
       });
 
-      durIn.addEventListener('input', (e) => {
-        seg.durationMin = parseFloat(e.target.value) || 0;
+      function onTimeChange() {
+        seg.min = parseInt(minIn.value, 10) || 0;
+        seg.sec = parseInt(secIn.value, 10) || 0;
+        const tSec = seg.min * 60 + seg.sec;
+        seg.durationMin = parseFloat((tSec / 60.0).toFixed(2));
+        const spd = seg.speedKmh || 0;
+        if (spd > 0) {
+          seg.distKm = parseFloat(((tSec * spd) / 3600.0).toFixed(2));
+          distIn.value = seg.distKm;
+        }
+        autoCalculateFinalSegment();
+        updateWorkoutPreview();
+      }
+
+      minIn.addEventListener('input', onTimeChange);
+      secIn.addEventListener('input', onTimeChange);
+
+      distIn.addEventListener('input', (e) => {
+        seg.distKm = parseFloat(e.target.value) || 0;
+        const spd = seg.speedKmh || 0;
+        if (spd > 0 && seg.distKm > 0) {
+          const tSec = Math.round((seg.distKm * 3600.0) / spd);
+          const ms = secToMinSec(tSec);
+          seg.min = ms.min;
+          seg.sec = ms.sec;
+          seg.durationMin = parseFloat((tSec / 60.0).toFixed(2));
+          minIn.value = ms.min;
+          secIn.value = ms.sec;
+        }
         autoCalculateFinalSegment();
         updateWorkoutPreview();
       });
@@ -726,12 +940,18 @@
     const nextId = (state.customSegments.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
     // Unset auto-calc on existing
     state.customSegments.forEach(s => s.autoCalc = false);
+    const spd = 13.0;
+    const durSec = 5 * 60;
+    const dist = parseFloat(((durSec * spd) / 3600.0).toFixed(2));
     state.customSegments.push({
       id: nextId,
       name: `Interval ${nextId}`,
+      min: 5,
+      sec: 0,
       durationMin: 5,
-      speedKmh: 13.0,
-      paceStr: FitEngine.kmhToPaceStr(13.0),
+      distKm: dist,
+      speedKmh: spd,
+      paceStr: FitEngine.kmhToPaceStr(spd),
       intensity: "Active",
       autoCalc: false
     });
@@ -743,19 +963,27 @@
   function addIntervalPair() {
     const nextId = (state.customSegments.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
     state.customSegments.forEach(s => s.autoCalc = false);
+    const intDist = parseFloat(((5 * 60 * 13.7) / 3600.0).toFixed(2));
     state.customSegments.push({
       id: nextId,
       name: `Interval`,
+      min: 5,
+      sec: 0,
       durationMin: 5,
+      distKm: intDist,
       speedKmh: 13.7,
       paceStr: FitEngine.kmhToPaceStr(13.7),
       intensity: "Active",
       autoCalc: false
     });
+    const recDist = parseFloat(((90 * 5.7) / 3600.0).toFixed(2));
     state.customSegments.push({
       id: nextId + 1,
       name: `Recovery`,
+      min: 1,
+      sec: 30,
       durationMin: 1.5,
+      distKm: recDist,
       speedKmh: 5.7,
       paceStr: FitEngine.kmhToPaceStr(5.7),
       intensity: "Resting",
@@ -793,23 +1021,38 @@
       let cur = startSpd;
       let stepIdx = 1;
 
+      const durSec = Math.round(stepDur * 60);
+      const durMs = secToMinSec(durSec);
+
+      const recSec = Math.round(recDur * 60);
+      const recMs = secToMinSec(recSec);
+
       while (cur <= endSpd + 0.01) {
+        const curSpd = parseFloat(cur.toFixed(1));
+        const dist = parseFloat(((durSec * curSpd) / 3600.0).toFixed(2));
         state.customSegments.push({
           id: stepIdx,
-          name: `Progression ${stepIdx} (${cur.toFixed(1)}k)`,
+          name: `Progression ${stepIdx} (${curSpd}k)`,
+          min: durMs.min,
+          sec: durMs.sec,
           durationMin: stepDur,
-          speedKmh: parseFloat(cur.toFixed(1)),
-          paceStr: FitEngine.kmhToPaceStr(cur),
+          distKm: dist,
+          speedKmh: curSpd,
+          paceStr: FitEngine.kmhToPaceStr(curSpd),
           intensity: 'Active',
           autoCalc: false
         });
         stepIdx++;
 
         if (incRec && cur < endSpd - 0.01) {
+          const rDist = parseFloat(((recSec * 5.7) / 3600.0).toFixed(2));
           state.customSegments.push({
             id: stepIdx,
             name: `Recovery`,
+            min: recMs.min,
+            sec: recMs.sec,
             durationMin: recDur,
+            distKm: rDist,
             speedKmh: 5.7,
             paceStr: FitEngine.kmhToPaceStr(5.7),
             intensity: 'Resting',
@@ -824,7 +1067,10 @@
       state.customSegments.push({
         id: stepIdx,
         name: 'Cool Down',
+        min: 0,
+        sec: 0,
         durationMin: 0,
+        distKm: 0,
         speedKmh: 10.6,
         paceStr: FitEngine.kmhToPaceStr(10.6),
         intensity: 'Active',
@@ -845,6 +1091,7 @@
       autoCalculateFinalSegment();
       plan = FitEngine.buildWorkoutPlan({
         mode: 'custom_segments',
+        calcMode: state.segCalcMode,
         segments: state.customSegments,
         targetDistKm: parseFloat(segTargetDistIn.value) || 0,
         autoCalcFinal: true
@@ -852,23 +1099,32 @@
     } else {
       plan = FitEngine.buildWorkoutPlan({
         mode: 'repeats',
-        warmupMin: wuDurIn.value,
+        calcMode: state.repeatsCalcMode,
+        warmupMin: wuMinIn.value,
+        warmupSec: wuSecIn.value,
+        warmupDistKm: wuDistIn.value,
         warmupKmh: wuKmhIn.value,
         repeats: repCountIn.value,
-        intMin: intDurIn.value,
+        intMin: intMinIn.value,
+        intSec: intSecIn.value,
+        intDistKm: intDistIn.value,
         intKmh: intKmhIn.value,
-        recMin: recDurIn.value,
+        recMin: recMinIn.value,
+        recSec: recSecIn.value,
+        recDistKm: recDistIn.value,
         recKmh: recKmhIn.value,
         cdKmh: cdKmhIn.value,
         cdMode: cdModeSelect.value,
         targetDistKm: targetDistIn.value,
-        cdManualMin: cdManualDurIn.value
+        cdManualMin: cdManualMinIn.value,
+        cdManualSec: cdManualSecIn.value,
+        cdManualDistKm: cdManualDistIn.value
       });
 
       // Update warm up dist badge
-      const wuDurSec = Math.round((parseFloat(wuDurIn.value) || 0) * 60);
+      const wuSec = parseMinSecToSec(wuMinIn.value, wuSecIn.value);
       const wuSpdMs = FitEngine.kmhToMs(wuKmhIn.value || 0);
-      wuDistEst.innerText = `${((wuDurSec * wuSpdMs) / 1000.0).toFixed(2)} km`;
+      wuDistEst.innerText = `${((wuSec * wuSpdMs) / 1000.0).toFixed(2)} km`;
     }
 
     const totalSec = plan.targetSpeeds.length;
@@ -948,21 +1204,36 @@
 
         if (state.workoutMode === 'custom_segments') {
           autoCalculateFinalSegment();
+          config.calcMode = state.segCalcMode;
           config.segments = state.customSegments;
           config.targetDistKm = parseFloat(segTargetDistIn.value) || 0;
           config.autoCalcFinal = true;
         } else {
-          config.warmupMin = wuDurIn.value;
+          config.calcMode = state.repeatsCalcMode;
+          config.warmupMin = wuMinIn.value;
+          config.warmupSec = wuSecIn.value;
+          config.warmupDistKm = wuDistIn.value;
           config.warmupKmh = wuKmhIn.value;
+
           config.repeats = repCountIn.value;
-          config.intMin = intDurIn.value;
+
+          config.intMin = intMinIn.value;
+          config.intSec = intSecIn.value;
+          config.intDistKm = intDistIn.value;
           config.intKmh = intKmhIn.value;
-          config.recMin = recDurIn.value;
+
+          config.recMin = recMinIn.value;
+          config.recSec = recSecIn.value;
+          config.recDistKm = recDistIn.value;
           config.recKmh = recKmhIn.value;
+
           config.cdKmh = cdKmhIn.value;
           config.cdMode = cdModeSelect.value;
           config.targetDistKm = targetDistIn.value;
-          config.cdManualMin = cdManualDurIn.value;
+
+          config.cdManualMin = cdManualMinIn.value;
+          config.cdManualSec = cdManualSecIn.value;
+          config.cdManualDistKm = cdManualDistIn.value;
         }
 
         const res = FitEngine.processWorkout(state.aBuffer, config);
@@ -1037,7 +1308,6 @@
           files: [tcxFile, fitFile]
         });
       } else {
-        // Fallback to downloading New.tcx directly
         downloadFile('tcxGps', 'New.tcx', 'application/vnd.garmin.tcx+xml');
       }
     } catch (err) {
@@ -1154,6 +1424,7 @@
       map[title] = {
         title,
         mode: 'custom_segments',
+        calcMode: state.segCalcMode,
         targetDistKm: parseFloat(segTargetDistIn.value) || 12.0,
         deviceType: deviceSelect.value,
         trimStationary: trimStationaryIn.checked,
@@ -1163,17 +1434,26 @@
       map[title] = {
         title,
         mode: 'repeats',
-        warmupMin: wuDurIn.value,
+        calcMode: state.repeatsCalcMode,
+        warmupMin: wuMinIn.value,
+        warmupSec: wuSecIn.value,
+        warmupDistKm: wuDistIn.value,
         warmupKmh: wuKmhIn.value,
         repeats: repCountIn.value,
-        intMin: intDurIn.value,
+        intMin: intMinIn.value,
+        intSec: intSecIn.value,
+        intDistKm: intDistIn.value,
         intKmh: intKmhIn.value,
-        recMin: recDurIn.value,
+        recMin: recMinIn.value,
+        recSec: recSecIn.value,
+        recDistKm: recDistIn.value,
         recKmh: recKmhIn.value,
         cdKmh: cdKmhIn.value,
         cdMode: cdModeSelect.value,
         targetDistKm: targetDistIn.value,
-        cdManualMin: cdManualDurIn.value,
+        cdManualMin: cdManualMinIn.value,
+        cdManualSec: cdManualSecIn.value,
+        cdManualDistKm: cdManualDistIn.value,
         deviceType: deviceSelect.value,
         trimStationary: trimStationaryIn.checked
       };
@@ -1198,26 +1478,81 @@
     if (p.mode === 'custom_segments' || p.segments) {
       switchMode('custom_segments');
       segTargetDistIn.value = p.targetDistKm || 12.0;
-      state.customSegments = p.segments || [];
+      if (p.calcMode) {
+        state.segCalcMode = p.calcMode;
+        if (segCalcModeSelect) segCalcModeSelect.value = p.calcMode;
+      }
+      state.customSegments = (p.segments || []).map((s, idx) => {
+        const durMin = s.durationMin !== undefined ? s.durationMin : (s.duration || 0);
+        const totSec = (s.min !== undefined && s.sec !== undefined) ? (parseInt(s.min, 10) * 60 + parseInt(s.sec, 10)) : Math.round(durMin * 60);
+        const ms = secToMinSec(totSec);
+        const spd = s.speedKmh !== undefined ? s.speedKmh : 10.0;
+        const dist = s.distKm !== undefined ? s.distKm : parseFloat(((totSec * spd) / 3600.0).toFixed(2));
+        return {
+          id: s.id || (idx + 1),
+          name: s.name || `Segment ${idx + 1}`,
+          min: ms.min,
+          sec: ms.sec,
+          durationMin: parseFloat((totSec / 60.0).toFixed(2)),
+          distKm: dist,
+          speedKmh: spd,
+          paceStr: s.paceStr || FitEngine.kmhToPaceStr(spd),
+          intensity: s.intensity || 'Active',
+          autoCalc: s.autoCalc !== undefined ? s.autoCalc : (idx === p.segments.length - 1)
+        };
+      });
       autoCalculateFinalSegment();
       renderSegmentsList();
     } else {
       switchMode('repeats');
-      wuDurIn.value = p.warmupMin;
-      wuKmhIn.value = p.warmupKmh;
-      wuPaceIn.value = FitEngine.kmhToPaceStr(p.warmupKmh);
-      repCountIn.value = p.repeats;
-      intDurIn.value = p.intMin;
-      intKmhIn.value = p.intKmh;
-      intPaceIn.value = FitEngine.kmhToPaceStr(p.intKmh);
-      recDurIn.value = p.recMin;
-      recKmhIn.value = p.recKmh;
-      recPaceIn.value = FitEngine.kmhToPaceStr(p.recKmh);
-      cdKmhIn.value = p.cdKmh;
-      cdPaceIn.value = FitEngine.kmhToPaceStr(p.cdKmh);
-      targetDistIn.value = p.targetDistKm;
+      if (p.calcMode) {
+        state.repeatsCalcMode = p.calcMode;
+        const rad = document.querySelector(`input[name="repeats-calc-mode"][value="${p.calcMode}"]`);
+        if (rad) rad.checked = true;
+        pillRepeatsDur?.classList.toggle('active', p.calcMode === 'duration');
+        pillRepeatsDist?.classList.toggle('active', p.calcMode === 'distance');
+      }
+
+      const wuSec = (p.warmupMin !== undefined && p.warmupSec !== undefined) ? (parseInt(p.warmupMin, 10) * 60 + parseInt(p.warmupSec, 10)) : Math.round((parseFloat(p.warmupMin) || 14) * 60);
+      const wuMs = secToMinSec(wuSec);
+      wuMinIn.value = wuMs.min;
+      wuSecIn.value = wuMs.sec;
+      wuDurIn.value = (wuSec / 60.0).toFixed(2);
+      wuKmhIn.value = p.warmupKmh || 10.6;
+      wuPaceIn.value = FitEngine.kmhToPaceStr(p.warmupKmh || 10.6);
+      wuDistIn.value = p.warmupDistKm !== undefined ? p.warmupDistKm : ((wuSec * (p.warmupKmh || 10.6)) / 3600.0).toFixed(2);
+
+      repCountIn.value = p.repeats || 3;
+
+      const intSec = (p.intMin !== undefined && p.intSec !== undefined) ? (parseInt(p.intMin, 10) * 60 + parseInt(p.intSec, 10)) : Math.round((parseFloat(p.intMin) || 10) * 60);
+      const intMs = secToMinSec(intSec);
+      intMinIn.value = intMs.min;
+      intSecIn.value = intMs.sec;
+      intDurIn.value = (intSec / 60.0).toFixed(2);
+      intKmhIn.value = p.intKmh || 13.7;
+      intPaceIn.value = FitEngine.kmhToPaceStr(p.intKmh || 13.7);
+      intDistIn.value = p.intDistKm !== undefined ? p.intDistKm : ((intSec * (p.intKmh || 13.7)) / 3600.0).toFixed(2);
+
+      const recSec = (p.recMin !== undefined && p.recSec !== undefined) ? (parseInt(p.recMin, 10) * 60 + parseInt(p.recSec, 10)) : Math.round((parseFloat(p.recMin) || 2) * 60);
+      const recMs = secToMinSec(recSec);
+      recMinIn.value = recMs.min;
+      recSecIn.value = recMs.sec;
+      recDurIn.value = (recSec / 60.0).toFixed(2);
+      recKmhIn.value = p.recKmh || 5.7;
+      recPaceIn.value = FitEngine.kmhToPaceStr(p.recKmh || 5.7);
+      recDistIn.value = p.recDistKm !== undefined ? p.recDistKm : ((recSec * (p.recKmh || 5.7)) / 3600.0).toFixed(2);
+
+      cdKmhIn.value = p.cdKmh || 10.6;
+      cdPaceIn.value = FitEngine.kmhToPaceStr(p.cdKmh || 10.6);
+      targetDistIn.value = p.targetDistKm || 12.0;
       cdModeSelect.value = p.cdMode || 'auto_distance';
-      cdManualDurIn.value = p.cdManualMin || 12;
+
+      const cdSec = (p.cdManualMin !== undefined && p.cdManualSec !== undefined) ? (parseInt(p.cdManualMin, 10) * 60 + parseInt(p.cdManualSec, 10)) : Math.round((parseFloat(p.cdManualMin) || 12) * 60);
+      const cdMs = secToMinSec(cdSec);
+      cdManualMinIn.value = cdMs.min;
+      cdManualSecIn.value = cdMs.sec;
+      cdManualDurIn.value = (cdSec / 60.0).toFixed(2);
+      cdManualDistIn.value = p.cdManualDistKm !== undefined ? p.cdManualDistKm : ((cdSec * (p.cdKmh || 10.6)) / 3600.0).toFixed(2);
       cdManualGroup.classList.toggle('hidden', cdModeSelect.value !== 'manual');
     }
 
