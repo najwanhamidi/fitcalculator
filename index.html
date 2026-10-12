@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitSync">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>FitSync Mobile - FIT Interval Rebuilder</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%200%20100%20100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230f172a%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 text-anchor=%22middle%22 fill=%22%2338bdf8%22>⚡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <!-- Bundled JSZip for downloading all files as a single ZIP on mobile -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header with Dynamic Island safe spacing -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="app-logo">⚡</span>
+        <div>
+          <h1 class="app-title">FitSync Mobile</h1>
+          <p class="app-subtitle">100% Client-Side FIT Interval &amp; Treadmill Rebuilder</p>
+        </div>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="device-pill-text">Amazfit T-Rex 3</span>
+      </div>
+    </header>
+
+    <!-- Step 1: File Selection -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">1</span>
+        <h2>Select Workout File (A.fit)</h2>
+      </div>
+      <p class="card-desc">
+        Select your watch FIT file from iOS <strong>Files / iCloud Drive</strong> or drag &amp; drop.
+      </p>
+
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">📥</div>
+        <div class="dropzone-text">Tap to select <strong>A.fit</strong></div>
+        <div class="dropzone-hint">iCloud Drive • On My iPhone • FIT format</div>
+        <input type="file" id="fit-file-input" accept=".fit" style="display: none;">
+      </div>
+
+      <div id="file-status-box" class="file-status-box hidden">
+        <div class="file-info-header">
+          <span class="file-name" id="file-name-text">A.fit</span>
+          <button type="button" id="change-file-btn" class="btn-text">Change</button>
+        </div>
+        <div class="file-meta-grid">
+          <div><span class="meta-label">Records</span><span class="meta-val" id="file-records-count">--</span></div>
+          <div><span class="meta-label">Duration</span><span class="meta-val" id="file-duration-text">--:--</span></div>
+          <div><span class="meta-label">Heart Rate</span><span class="meta-val" id="file-hr-range">-- bpm</span></div>
+          <div><span class="meta-label">Stationary</span><span class="meta-val" id="file-stationary-count">--</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Workout Structure -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">2</span>
+        <h2>Running Structure &amp; Intervals</h2>
+      </div>
+
+      <!-- Saved Profiles Toolbar -->
+      <div class="profiles-bar">
+        <div class="profiles-title">
+          <span>📁 Saved Profiles</span>
+          <button type="button" id="save-profile-btn" class="btn-xs btn-primary">💾 Save Current</button>
+        </div>
+        <div class="profiles-row">
+          <select id="saved-profiles-select">
+            <option value="">-- Select Saved Profile --</option>
+          </select>
+          <button type="button" id="load-profile-btn" class="btn-xs btn-secondary">Load</button>
+          <button type="button" id="delete-profile-btn" class="btn-xs btn-danger">🗑️</button>
+          <button type="button" id="export-profiles-btn" class="btn-xs btn-secondary" title="Export as JSON">📤</button>
+        </div>
+      </div>
+
+      <!-- Segmented Mode Control -->
+      <div class="mode-tabs">
+        <button type="button" id="mode-repeats-btn" class="tab-btn active">🔁 Structured Repeats</button>
+        <button type="button" id="mode-segments-btn" class="tab-btn">📋 Manual Segments</button>
+      </div>
+
+      <!-- TAB 1: Structured Repeats Form -->
+      <div id="repeats-pane" class="tab-pane">
+        <!-- Quick Presets -->
+        <label class="section-label">Quick Presets (1-Tap Shortcuts):</label>
+        <div class="presets-scroll" id="presets-container">
+          <button type="button" class="preset-chip active" data-preset="0">3×10m @ 13.7 (12km)</button>
+          <button type="button" class="preset-chip" data-preset="1">5×3m @ 14.2 (8.4km)</button>
+          <button type="button" class="preset-chip" data-preset="2">3×5m @ 13.7 (8.4km)</button>
+          <button type="button" class="preset-chip" data-preset="3">5×6m @ 14.2 (12.1km)</button>
+        </div>
+
+        <!-- 1. Warm Up -->
+        <div class="form-block block-warmup">
+          <h3 class="block-title">🔵 1. Warm Up</h3>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Duration (min)</label>
+              <input type="number" id="wu-dur" value="14" step="0.5" min="0" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Speed (km/h)</label>
+              <input type="number" id="wu-kmh" value="10.6" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Pace (min/km)</label>
+              <input type="text" id="wu-pace" value="5:40" placeholder="5:40">
+            </div>
+            <div class="input-group align-center">
+              <span class="est-dist-badge" id="wu-dist-est">2.47 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Repeats -->
+        <div class="form-block block-repeats">
+          <h3 class="block-title">🟠 2. Interval &amp; Recovery Repeats</h3>
+          <div class="input-group mb-2">
+            <label>Number of Repeats</label>
+            <input type="number" id="rep-count" value="3" min="1" max="50" inputmode="numeric">
+          </div>
+
+          <div class="sub-block">
+            <span class="sub-block-badge active-badge">Work Interval (per set)</span>
+            <div class="form-row-3">
+              <div class="input-group">
+                <label>Time (min)</label>
+                <input type="number" id="int-dur" value="10" step="0.5" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>km/h</label>
+                <input type="number" id="int-kmh" value="13.7" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>min/km</label>
+                <input type="text" id="int-pace" value="4:23" placeholder="4:23">
+              </div>
+            </div>
+          </div>
+
+          <div class="sub-block mt-2">
+            <span class="sub-block-badge rest-badge">Recovery (per set)</span>
+            <div class="form-row-3">
+              <div class="input-group">
+                <label>Time (min)</label>
+                <input type="number" id="rec-dur" value="2" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>km/h</label>
+                <input type="number" id="rec-kmh" value="5.7" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>min/km</label>
+                <input type="text" id="rec-pace" value="10:32" placeholder="10:32">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Cool Down & Target Distance -->
+        <div class="form-block block-cooldown">
+          <h3 class="block-title">🟣 3. Cool Down &amp; Target Distance</h3>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Cool Down km/h</label>
+              <input type="number" id="cd-kmh" value="10.6" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>min/km</label>
+              <input type="text" id="cd-pace" value="5:40" placeholder="5:40">
+            </div>
+          </div>
+
+          <div class="form-row-2 mt-2">
+            <div class="input-group">
+              <label>Target Distance (km)</label>
+              <input type="number" id="target-dist" value="12.0" step="0.01" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Cool Down Mode</label>
+              <select id="cd-mode-select">
+                <option value="auto_distance" selected>Auto Target Distance</option>
+                <option value="manual">Manual Duration</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="cd-manual-group" class="input-group mt-2 hidden">
+            <label>Manual Cool Down Time (min)</label>
+            <input type="number" id="cd-manual-dur" value="12" step="0.5" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Manual Segments Form -->
+      <div id="segments-pane" class="tab-pane hidden">
+        <div class="segments-top-bar">
+          <div class="input-group" style="flex: 1;">
+            <label>Target Total Distance (km)</label>
+            <input type="number" id="seg-target-dist" value="12.0" step="0.01" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="segments-actions-grid">
+          <button type="button" id="add-segment-btn" class="btn-sm btn-primary">➕ Add Segment</button>
+          <button type="button" id="add-pair-btn" class="btn-sm btn-secondary">➕ Add Pair</button>
+          <button type="button" id="progression-btn" class="btn-sm btn-secondary" style="color: var(--accent-blue);">📈 Progression...</button>
+          <button type="button" id="recalc-final-btn" class="btn-sm btn-secondary" title="Auto-calculate final segment">⚡ Auto Final</button>
+        </div>
+
+        <!-- Segments Dynamic Container -->
+        <div id="segments-list" class="segments-list">
+          <!-- Rendered dynamically by JS -->
+        </div>
+
+        <!-- Real-time calculation banner -->
+        <div class="seg-calc-banner">
+          <div><strong>Target:</strong> <span id="banner-target">12.00 km</span></div>
+          <div><strong>Prior:</strong> <span id="banner-prior">0.00 km</span></div>
+          <div><strong>Final Seg:</strong> <span id="banner-remaining" style="color: var(--accent-purple);">0.00 km</span></div>
+        </div>
+      </div>
+
+      <!-- Live Workout Timeline -->
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <span class="timeline-title">Workout Profile Timeline</span>
+          <span class="timeline-note" id="timeline-summary-text">Live Profile</span>
+        </div>
+        <div id="timeline-bar" class="timeline-bar"></div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-lbl">Duration</div>
+            <div class="stat-val" id="prev-duration">--:--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Distance</div>
+            <div class="stat-val" id="prev-distance">-- km</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Avg Pace</div>
+            <div class="stat-val" id="prev-pace">--:--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Avg Speed</div>
+            <div class="stat-val" id="prev-speed">-- km/h</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: Device & Trim Options -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">3</span>
+        <h2>Device &amp; Settings</h2>
+      </div>
+
+      <div class="input-group mb-3">
+        <label>Smartwatch Device</label>
+        <select id="device-select">
+          <option value="Amazfit T-Rex 3" selected>Amazfit T-Rex 3 (Default)</option>
+          <option value="Amazfit Cheetah Pro">Amazfit Cheetah Pro</option>
+          <option value="Amazfit Balance">Amazfit Balance</option>
+          <option value="Amazfit T-Rex Ultra">Amazfit T-Rex Ultra</option>
+          <option value="Garmin Forerunner 965">Garmin Forerunner 965</option>
+          <option value="Apple Watch Ultra 2">Apple Watch Ultra 2</option>
+          <option value="COROS PACE 3">COROS PACE 3</option>
+          <option value="Custom Device">Custom Device</option>
+        </select>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="trim-stationary" checked>
+        <span>Remove all leading records of &lt; 0.3 m/s (standstill before start)</span>
+      </label>
+    </section>
+
+    <!-- Step 4: Process Button -->
+    <div class="action-section">
+      <button type="button" id="process-btn" class="btn-lg btn-primary btn-block">
+        ⚡ Process Workout &amp; Generate Files
+      </button>
+      <div id="process-loader" class="loader-box hidden">
+        <div class="spinner"></div>
+        <span>Processing FIT records &amp; synthesizing 400m track...</span>
+      </div>
+    </div>
+
+    <!-- Step 5: Output Results & Downloads -->
+    <section id="results-card" class="card results-card hidden">
+      <div class="card-header">
+        <span class="step-num" style="background: var(--accent-green);">✓</span>
+        <h2 style="color: var(--accent-green);">Workout Generated!</h2>
+      </div>
+
+      <div class="stats-grid mb-3">
+        <div class="stat-box highlight">
+          <div class="stat-lbl">Final Time</div>
+          <div class="stat-val" id="res-time">--:--</div>
+        </div>
+        <div class="stat-box highlight">
+          <div class="stat-lbl">Final Distance</div>
+          <div class="stat-val" id="res-dist">-- km</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Avg Pace</div>
+          <div class="stat-val" id="res-pace">--:--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Max Speed</div>
+          <div class="stat-val" id="res-max-spd">-- km/h</div>
+        </div>
+      </div>
+
+      <!-- iOS Share Sheet Primary Action -->
+      <div class="ios-share-box">
+        <button type="button" id="ios-share-btn" class="btn-lg btn-success btn-block">
+          📤 Open in Zepp / Share to Files
+        </button>
+        <p class="share-hint">Directly opens iOS Share Sheet to send to Zepp App, Strava, or Save to Files.</p>
+      </div>
+
+      <!-- Direct Download Buttons -->
+      <label class="section-label mt-3">Download Output Files:</label>
+      <div class="dl-buttons-grid">
+        <button type="button" id="dl-zip-btn" class="btn-sm btn-primary">📦 Download All (.ZIP)</button>
+        <button type="button" id="dl-tcx-btn" class="btn-sm btn-secondary">🌟 New.tcx (Zepp)</button>
+        <button type="button" id="dl-fit-gps-btn" class="btn-sm btn-secondary">🗺️ New_gps.fit</button>
+        <button type="button" id="dl-fit-indoor-btn" class="btn-sm btn-secondary">⌚ New.fit (Indoor)</button>
+        <button type="button" id="dl-tcx-indoor-btn" class="btn-sm btn-secondary">📄 New_indoor.tcx</button>
+        <button type="button" id="dl-gpx-btn" class="btn-sm btn-secondary">📍 New.gpx</button>
+        <button type="button" id="dl-csv-btn" class="btn-sm btn-secondary">📊 New.csv</button>
+      </div>
+
+      <!-- Lap Breakdown Table -->
+      <div class="laps-header">
+        <h3 class="block-title">Interval Laps &amp; Biometrics</h3>
+        <button type="button" id="toggle-laps-btn" class="btn-text">Show Laps</button>
+      </div>
+      <div id="laps-container" class="laps-table-container hidden">
+        <table class="laps-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Phase</th>
+              <th>Time</th>
+              <th>Pace</th>
+              <th>Dist</th>
+              <th>HR</th>
+              <th>Cad</th>
+            </tr>
+          </thead>
+          <tbody id="laps-tbody">
+            <!-- Rows populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Progression Helper Modal -->
+    <div id="progression-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>📈 Progression Generator</h3>
+          <button type="button" id="close-prog-modal-btn" class="btn-close">&times;</button>
+        </div>
+        <p class="modal-sub">Quickly create progressive speed segments (e.g. 11.0 &rarr; 14.0 km/h).</p>
+        <div class="modal-form">
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Start Speed (km/h)</label>
+              <input type="number" id="prog-start-spd" value="11.0" step="0.5" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>End Speed (km/h)</label>
+              <input type="number" id="prog-end-spd" value="14.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Step Increment (km/h)</label>
+              <input type="number" id="prog-step-spd" value="0.5" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Step Duration (min)</label>
+              <input type="number" id="prog-step-dur" value="3.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Include Recovery?</label>
+              <select id="prog-include-rec">
+                <option value="no">No (Continuous)</option>
+                <option value="yes">Yes (After each step)</option>
+              </select>
+            </div>
+            <div class="input-group" id="prog-rec-dur-group" style="display: none;">
+              <label>Recovery (min)</label>
+              <input type="number" id="prog-rec-dur" value="1.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-prog-btn" class="btn-sm btn-secondary">Cancel</button>
+          <button type="button" id="apply-prog-btn" class="btn-sm btn-primary">Apply Progression</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Profile Modal -->
+    <div id="save-profile-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>💾 Save Workout Profile</h3>
+          <button type="button" id="close-save-modal-btn" class="btn-close">&times;</button>
+        </div>
+        <div class="input-group mt-2">
+          <label>Profile Title</label>
+          <input type="text" id="save-profile-title" placeholder="e.g. 3x10m Threshold (12km)">
+        </div>
+        <div class="modal-footer mt-3">
+          <button type="button" id="cancel-save-modal-btn" class="btn-sm btn-secondary">Cancel</button>
+          <button type="button" id="confirm-save-profile-btn" class="btn-sm btn-primary">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <p>FitSync Studio Mobile • Optimized for iPhone 15 Pro Max • GitHub Pages Ready</p>
+    </footer>
+  </div>
+
+  <script src="fit_engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
