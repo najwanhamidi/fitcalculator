@@ -10,9 +10,13 @@
 
   // --- Global State ---
   const state = {
-    fileBuffer: null,
-    fileName: 'A.fit',
-    decodedData: null,
+    aBuffer: null,
+    aFileName: 'A.fit',
+    decodedA: null,
+    qBuffer: null,
+    qFileName: '',
+    decodedQ: null,
+    syncData: null,
     workoutMode: 'repeats', // 'repeats' or 'custom_segments'
     customSegments: [
       { id: 1, name: "Warm Up", durationMin: 14, speedKmh: 10.6, paceStr: "5:40", intensity: "Active", autoCalc: false },
@@ -54,15 +58,34 @@
   ];
 
   // --- DOM Elements ---
-  const dropzone = document.getElementById('dropzone');
-  const fitFileInput = document.getElementById('fit-file-input');
-  const fileStatusBox = document.getElementById('file-status-box');
-  const fileNameText = document.getElementById('file-name-text');
-  const changeFileBtn = document.getElementById('change-file-btn');
-  const fileRecordsCount = document.getElementById('file-records-count');
-  const fileDurationText = document.getElementById('file-duration-text');
-  const fileHrRange = document.getElementById('file-hr-range');
-  const fileStationaryCount = document.getElementById('file-stationary-count');
+  // A.fit elements
+  const aDropzone = document.getElementById('a-dropzone');
+  const aFileInput = document.getElementById('a-file-input');
+  const aStatusBox = document.getElementById('a-status-box');
+  const aFileNameText = document.getElementById('a-file-name-text');
+  const aChangeBtn = document.getElementById('a-change-btn');
+  const aRecordsCount = document.getElementById('a-records-count');
+  const aDurationText = document.getElementById('a-duration-text');
+  const aHrRange = document.getElementById('a-hr-range');
+  const aStationaryCount = document.getElementById('a-stationary-count');
+
+  // Q.fit elements
+  const qDropzone = document.getElementById('q-dropzone');
+  const qFileInput = document.getElementById('q-file-input');
+  const qStatusBox = document.getElementById('q-status-box');
+  const qFileNameText = document.getElementById('q-file-name-text');
+  const qChangeBtn = document.getElementById('q-change-btn');
+  const qRecordsCount = document.getElementById('q-records-count');
+  const qDurationText = document.getElementById('q-duration-text');
+  const qMaxSpd = document.getElementById('q-max-spd');
+  const qPhasesCount = document.getElementById('q-phases-count');
+
+  // Sync elements
+  const syncBanner = document.getElementById('sync-banner');
+  const syncDescText = document.getElementById('sync-desc-text');
+  const syncActionRow = document.getElementById('sync-action-row');
+  const syncPhasesPill = document.getElementById('sync-phases-pill');
+  const autofillQBtn = document.getElementById('autofill-q-btn');
 
   // Mode Buttons
   const modeRepeatsBtn = document.getElementById('mode-repeats-btn');
@@ -168,46 +191,73 @@
     updateWorkoutPreview();
   }
 
-  // --- File Upload & Decoding ---
+  // --- Dual File Upload & Sync Analysis ---
   function setupFileHandlers() {
-    dropzone.addEventListener('click', () => fitFileInput.click());
-    changeFileBtn.addEventListener('click', () => fitFileInput.click());
+    // A.fit handlers
+    if (aDropzone && aFileInput) {
+      aDropzone.addEventListener('click', () => aFileInput.click());
+      aChangeBtn?.addEventListener('click', () => aFileInput.click());
 
-    fitFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) handleSelectedFile(file);
+      aFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleAFile(file);
+      });
+
+      setupDropEvents(aDropzone, (file) => handleAFile(file));
+    }
+
+    // Q.fit handlers
+    if (qDropzone && qFileInput) {
+      qDropzone.addEventListener('click', () => qFileInput.click());
+      qChangeBtn?.addEventListener('click', () => qFileInput.click());
+
+      qFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleQFile(file);
+      });
+
+      setupDropEvents(qDropzone, (file) => handleQFile(file));
+    }
+
+    // Autofill button
+    autofillQBtn?.addEventListener('click', () => {
+      if (state.syncData && state.syncData.detected_q_phases) {
+        applyQPhases(state.syncData.detected_q_phases);
+      }
     });
+  }
 
+  function setupDropEvents(el, onFile) {
     ['dragenter', 'dragover'].forEach(name => {
-      dropzone.addEventListener(name, (e) => {
+      el.addEventListener(name, (e) => {
         e.preventDefault();
-        dropzone.classList.add('dragover');
+        el.classList.add('dragover');
       });
     });
 
     ['dragleave', 'drop'].forEach(name => {
-      dropzone.addEventListener(name, (e) => {
+      el.addEventListener(name, (e) => {
         e.preventDefault();
-        dropzone.classList.remove('dragover');
+        el.classList.remove('dragover');
       });
     });
 
-    dropzone.addEventListener('drop', (e) => {
+    el.addEventListener('drop', (e) => {
       const file = e.dataTransfer.files[0];
-      if (file) handleSelectedFile(file);
+      if (file) onFile(file);
     });
   }
 
-  function handleSelectedFile(file) {
-    state.fileName = file.name;
+  function handleAFile(file) {
+    state.aFileName = file.name;
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
-        state.fileBuffer = e.target.result;
-        state.decodedData = FitEngine.decodeFitBinary(state.fileBuffer);
+        state.aBuffer = e.target.result;
+        state.decodedA = FitEngine.decodeFitBinary(state.aBuffer);
 
-        const recs = state.decodedData.records;
+        const recs = state.decodedA.records;
         const count = recs.length;
         const durSec = count;
         const hrs = recs.map(r => r.heart_rate).filter(h => h && h > 30);
@@ -223,16 +273,174 @@
           else break;
         }
 
-        fileNameText.innerText = file.name;
-        fileRecordsCount.innerText = count.toLocaleString();
-        fileDurationText.innerText = FitEngine.formatDuration(durSec);
-        fileHrRange.innerText = hrs.length ? `${minHr}-${maxHr}` : 'None';
-        fileStationaryCount.innerText = `${statCount}s`;
+        aFileNameText.innerText = file.name;
+        aRecordsCount.innerText = count.toLocaleString();
+        aDurationText.innerText = FitEngine.formatDuration(durSec);
+        aHrRange.innerText = hrs.length ? `${minHr}-${maxHr}` : 'None';
+        aStationaryCount.innerText = `${statCount}s`;
 
-        dropzone.classList.add('hidden');
-        fileStatusBox.classList.remove('hidden');
+        aDropzone.classList.add('hidden');
+        aStatusBox.classList.remove('hidden');
+
+        runSyncAnalysis();
       } catch (err) {
-        alert(`Failed to decode FIT file: ${err.message}`);
+        alert(`Failed to decode A.fit: ${err.message}`);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handleQFile(file) {
+    state.qFileName = file.name;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        state.qBuffer = e.target.result;
+        state.decodedQ = FitEngine.decodeFitBinary(state.qBuffer);
+
+        const recs = state.decodedQ.records;
+        const count = recs.length;
+        const durSec = count;
+        const spds = recs.map(r => r.speed || 0);
+        const maxSpd = spds.length ? (Math.max(...spds) * 3.6).toFixed(1) : '--';
+
+        // Detect treadmill phases
+        const qPhases = FitEngine.detectSpeedPhases(recs, 20);
+
+        qFileNameText.innerText = file.name;
+        qRecordsCount.innerText = count.toLocaleString();
+        qDurationText.innerText = FitEngine.formatDuration(durSec);
+        qMaxSpd.innerText = `${maxSpd}k`;
+        qPhasesCount.innerText = `${qPhases.length}`;
+
+        qDropzone.classList.add('hidden');
+        qStatusBox.classList.remove('hidden');
+
+        runSyncAnalysis();
+      } catch (err) {
+        alert(`Failed to decode Q.fit: ${err.message}`);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function runSyncAnalysis() {
+    if (!state.decodedQ) return;
+
+    if (state.decodedA) {
+      state.syncData = FitEngine.analyzeSync(state.decodedA.records, state.decodedQ.records);
+      const clockDiff = state.syncData.clock_offset_sec || 0;
+      const moveDiff = state.syncData.movement_offset_sec || 0;
+      const statCount = state.syncData.a_leading_stationary_count || 0;
+      const phases = state.syncData.detected_q_phases || [];
+
+      let desc = `• <strong>Clock Offset:</strong> Q started ${clockDiff >= 0 ? clockDiff + 's after' : Math.abs(clockDiff) + 's before'} A.<br>`;
+      desc += `• <strong>Motion Alignment:</strong> Starts aligned within ${Math.abs(moveDiff)}s.<br>`;
+      desc += `• <strong>Stationary Start in Watch:</strong> ${statCount} initial standstill records detected.`;
+
+      syncDescText.innerHTML = desc;
+
+      if (phases.length > 0) {
+        syncPhasesPill.innerText = `${phases.length} treadmill phases detected`;
+        syncActionRow.classList.remove('hidden');
+      } else {
+        syncActionRow.classList.add('hidden');
+      }
+
+      syncBanner.classList.remove('hidden');
+    } else {
+      // Only Q is loaded
+      const phases = FitEngine.detectSpeedPhases(state.decodedQ.records, 20);
+      state.syncData = { detected_q_phases: phases };
+
+      syncDescText.innerHTML = `Loaded treadmill sensor data (${state.decodedQ.records.length} records). Ready to auto-fill intervals!`;
+      if (phases.length > 0) {
+        syncPhasesPill.innerText = `${phases.length} phases detected`;
+        syncActionRow.classList.remove('hidden');
+      }
+      syncBanner.classList.remove('hidden');
+    }
+  }
+
+  function applyQPhases(phases) {
+    if (!phases || phases.length < 2) {
+      alert('Not enough distinct speed phases detected in Q.fit.');
+      return;
+    }
+
+    if (state.workoutMode === 'custom_segments') {
+      // Build custom segments directly from Q phases!
+      state.customSegments = phases.map((p, idx) => {
+        let name = `Segment ${idx + 1}`;
+        let intensity = "Active";
+        if (idx === 0) name = "Warm Up";
+        else if (idx === phases.length - 1) name = "Cool Down";
+        else if (p.speed_kmh < 8.0) {
+          name = `Recovery ${Math.floor(idx / 2)}`;
+          intensity = "Resting";
+        } else {
+          name = `Interval ${Math.ceil(idx / 2)}`;
+        }
+
+        return {
+          id: idx + 1,
+          name: name,
+          durationMin: p.duration_min,
+          speedKmh: p.speed_kmh,
+          paceStr: p.pace_str || FitEngine.kmhToPaceStr(p.speed_kmh),
+          intensity: intensity,
+          autoCalc: (idx === phases.length - 1)
+        };
+      });
+
+      // Update total target distance estimate
+      let totalDistKm = 0;
+      phases.forEach(p => {
+        totalDistKm += (p.duration_sec * p.speed_ms) / 1000.0;
+      });
+      segTargetDistIn.value = (Math.round(totalDistKm * 10) / 10).toFixed(1);
+
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+    } else {
+      // Structured repeats mode
+      const wu = phases[0];
+      wuDurIn.value = wu.duration_min;
+      wuKmhIn.value = wu.speed_kmh;
+      wuPaceIn.value = FitEngine.kmhToPaceStr(wu.speed_kmh);
+
+      if (phases.length >= 3) {
+        const intP = phases[1];
+        const recP = phases[2];
+        intDurIn.value = intP.duration_min;
+        intKmhIn.value = intP.speed_kmh;
+        intPaceIn.value = FitEngine.kmhToPaceStr(intP.speed_kmh);
+
+        recDurIn.value = recP.duration_min;
+        recKmhIn.value = recP.speed_kmh;
+        recPaceIn.value = FitEngine.kmhToPaceStr(recP.speed_kmh);
+
+        const repCount = Math.floor((phases.length - 2) / 2);
+        repCountIn.value = Math.max(1, repCount);
+      }
+
+      const cd = phases[phases.length - 1];
+      cdKmhIn.value = cd.speed_kmh;
+      cdPaceIn.value = FitEngine.kmhToPaceStr(cd.speed_kmh);
+
+      let totalDistKm = 0;
+      phases.forEach(p => {
+        totalDistKm += (p.duration_sec * p.speed_ms) / 1000.0;
+      });
+      targetDistIn.value = (Math.round(totalDistKm * 10) / 10).toFixed(1);
+    }
+
+    updateWorkoutPreview();
+    alert(`⚡ Successfully populated ${phases.length} intervals and speeds directly from Q.fit!`);
+  }
       }
     };
 
@@ -719,7 +927,7 @@
   }
 
   function runProcessor() {
-    if (!state.fileBuffer) {
+    if (!state.aBuffer) {
       alert('Please upload or select an A.fit file first in Step 1.');
       return;
     }
@@ -757,7 +965,7 @@
           config.cdManualMin = cdManualDurIn.value;
         }
 
-        const res = FitEngine.processWorkout(state.fileBuffer, config);
+        const res = FitEngine.processWorkout(state.aBuffer, config);
 
         // Build outputs
         const tcxGps = FitEngine.buildTCX(res, true);

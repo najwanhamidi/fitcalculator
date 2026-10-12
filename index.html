@@ -37,29 +37,77 @@
     <section class="card">
       <div class="card-header">
         <span class="step-num">1</span>
-        <h2>Select Workout File (A.fit)</h2>
+        <h2>Select Workout Files (A.fit &amp; Q.fit)</h2>
       </div>
       <p class="card-desc">
-        Select your watch FIT file from iOS <strong>Files / iCloud Drive</strong> or drag &amp; drop.
+        Select your watch file (<strong>A.fit</strong>) and optionally your treadmill/sensor file (<strong>Q.fit</strong>) from iOS <strong>Files / iCloud Drive</strong>.
       </p>
 
-      <div id="dropzone" class="dropzone">
-        <div class="dropzone-icon">📥</div>
-        <div class="dropzone-text">Tap to select <strong>A.fit</strong></div>
-        <div class="dropzone-hint">iCloud Drive • On My iPhone • FIT format</div>
-        <input type="file" id="fit-file-input" accept=".fit" style="display: none;">
+      <div class="dual-file-grid">
+        <!-- A.fit Selector -->
+        <div class="file-picker-box">
+          <div class="file-picker-header">
+            <span class="file-picker-title">⌚ Watch File (A.fit)</span>
+            <span class="tag-required">Required</span>
+          </div>
+          <div id="a-dropzone" class="dropzone small-dropzone">
+            <div class="dropzone-icon">📥</div>
+            <div class="dropzone-text">Tap for <strong>A.fit</strong></div>
+            <div class="dropzone-hint">Watch HR &amp; Cadence</div>
+            <input type="file" id="a-file-input" accept=".fit" style="display: none;">
+          </div>
+          <div id="a-status-box" class="file-status-box hidden">
+            <div class="file-info-header">
+              <span class="file-name" id="a-file-name-text">A.fit</span>
+              <button type="button" id="a-change-btn" class="btn-text">Change</button>
+            </div>
+            <div class="file-meta-grid">
+              <div><span class="meta-label">Records</span><span class="meta-val" id="a-records-count">--</span></div>
+              <div><span class="meta-label">Duration</span><span class="meta-val" id="a-duration-text">--:--</span></div>
+              <div><span class="meta-label">HR</span><span class="meta-val" id="a-hr-range">--</span></div>
+              <div><span class="meta-label">Still</span><span class="meta-val" id="a-stationary-count">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q.fit Selector -->
+        <div class="file-picker-box">
+          <div class="file-picker-header">
+            <span class="file-picker-title">🏃 Treadmill File (Q.fit)</span>
+            <span class="tag-optional">Optional</span>
+          </div>
+          <div id="q-dropzone" class="dropzone small-dropzone">
+            <div class="dropzone-icon">📥</div>
+            <div class="dropzone-text">Tap for <strong>Q.fit</strong></div>
+            <div class="dropzone-hint">Treadmill Sensor Speeds</div>
+            <input type="file" id="q-file-input" accept=".fit" style="display: none;">
+          </div>
+          <div id="q-status-box" class="file-status-box hidden">
+            <div class="file-info-header">
+              <span class="file-name" id="q-file-name-text" style="color: var(--accent-cyan);">Q.fit</span>
+              <button type="button" id="q-change-btn" class="btn-text">Change</button>
+            </div>
+            <div class="file-meta-grid">
+              <div><span class="meta-label">Records</span><span class="meta-val" id="q-records-count">--</span></div>
+              <div><span class="meta-label">Duration</span><span class="meta-val" id="q-duration-text">--:--</span></div>
+              <div><span class="meta-label">Max Spd</span><span class="meta-val" id="q-max-spd">--</span></div>
+              <div><span class="meta-label">Phases</span><span class="meta-val" id="q-phases-count">--</span></div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div id="file-status-box" class="file-status-box hidden">
-        <div class="file-info-header">
-          <span class="file-name" id="file-name-text">A.fit</span>
-          <button type="button" id="change-file-btn" class="btn-text">Change</button>
+      <!-- Sync Banner (When both files or Q is selected) -->
+      <div id="sync-banner" class="sync-banner-card hidden">
+        <div class="sync-banner-head">
+          <span>🔄 Sync &amp; Interval Analysis (A.fit &amp; Q.fit)</span>
         </div>
-        <div class="file-meta-grid">
-          <div><span class="meta-label">Records</span><span class="meta-val" id="file-records-count">--</span></div>
-          <div><span class="meta-label">Duration</span><span class="meta-val" id="file-duration-text">--:--</span></div>
-          <div><span class="meta-label">Heart Rate</span><span class="meta-val" id="file-hr-range">-- bpm</span></div>
-          <div><span class="meta-label">Stationary</span><span class="meta-val" id="file-stationary-count">--</span></div>
+        <div class="sync-banner-body">
+          <p id="sync-desc-text" style="font-size: 11px; line-height: 1.4; color: var(--text-muted);"></p>
+          <div id="sync-action-row" class="sync-action-row hidden" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span id="sync-phases-pill" class="phases-pill">-- intervals detected</span>
+            <button type="button" id="autofill-q-btn" class="btn-sm btn-primary">⚡ Auto-Fill Structure from Q.fit</button>
+          </div>
         </div>
       </div>
     </section>

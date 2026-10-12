@@ -1,0 +1,3864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitSync">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>FitSync Mobile - FIT Interval Rebuilder</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%200%20100%20100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230f172a%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 text-anchor=%22middle%22 fill=%22%2338bdf8%22>⚡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <style>
+/* FitSync Mobile - Premium iOS Styling for iPhone 15 Pro Max & Modern Browsers */
+:root {
+  --bg-main: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.75);
+  --bg-card-border: rgba(255, 255, 255, 0.1);
+  --bg-input: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent-blue: #38bdf8;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-orange: #f97316;
+  --accent-purple: #a855f7;
+  --accent-red: #ef4444;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-stack);
+}
+
+body {
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+  color: var(--text-main);
+  line-height: 1.45;
+  min-height: 100vh;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-wrapper {
+  max-width: 540px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px 12px;
+  gap: 10px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-logo {
+  font-size: 28px;
+  background: linear-gradient(135deg, #38bdf8, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.app-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 9999px;
+  font-size: 11px;
+  color: var(--accent-blue);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent-blue);
+  box-shadow: 0 0 6px var(--accent-blue);
+}
+
+/* Card Container */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.card-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* Step 1: Dropzone */
+.dropzone {
+  border: 2px dashed rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--radius-md);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropzone:active, .dropzone.dragover {
+  border-color: var(--accent-blue);
+  background: rgba(56, 189, 248, 0.08);
+  transform: scale(0.99);
+}
+
+.dropzone-icon {
+  font-size: 36px;
+  margin-bottom: 6px;
+}
+
+.dropzone-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.dropzone-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* Step 1: Dual File Pickers */
+.dual-file-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .dual-file-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.file-picker-box {
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+
+.file-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.file-picker-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag-required {
+  font-size: 10px;
+  color: var(--accent-blue);
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.tag-optional {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.dropzone.small-dropzone {
+  padding: 14px 10px;
+}
+
+.dropzone.small-dropzone .dropzone-icon {
+  font-size: 26px;
+  margin-bottom: 2px;
+}
+
+.dropzone.small-dropzone .dropzone-text {
+  font-size: 13px;
+}
+
+.dropzone.small-dropzone .dropzone-hint {
+  font-size: 10px;
+}
+
+/* Sync Banner */
+.sync-banner-card {
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.sync-banner-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  margin-bottom: 6px;
+}
+
+.phases-pill {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.15);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.file-status-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.file-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-green);
+}
+
+.file-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+
+.meta-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.meta-val {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-top: 2px;
+}
+
+/* Profiles Toolbar */
+.profiles-bar {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.profiles-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.profiles-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.profiles-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mode Control Tabs */
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.tab-btn {
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  background: var(--accent-blue);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+}
+
+/* Presets Scroll */
+.section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.presets-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.presets-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.preset-chip {
+  flex: 0 0 auto;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.preset-chip.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+/* Form Blocks */
+.form-block {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.block-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.block-warmup .block-title { color: var(--accent-blue); }
+.block-repeats .block-title { color: var(--accent-orange); }
+.block-cooldown .block-title { color: var(--accent-purple); }
+
+.sub-block {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  position: relative;
+}
+
+.sub-block-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.active-badge {
+  background: rgba(249, 115, 22, 0.2);
+  color: var(--accent-orange);
+}
+
+.rest-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-green);
+}
+
+/* Inputs & Forms */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-group label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Set font-size: 16px to prevent iOS Safari auto-zooming! */
+input[type="number"],
+input[type="text"],
+select {
+  height: 44px;
+  background: var(--bg-input);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  padding: 0 10px;
+  font-size: 16px;
+  font-weight: 500;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--accent-blue);
+}
+
+.est-dist-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-blue);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Segments Tab */
+.segments-top-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.segments-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.segments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.segment-item-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+
+.segment-item-card.auto-calc-active {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.seg-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.seg-num-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.seg-inputs-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.seg-inputs-grid input, .seg-inputs-grid select {
+  height: 38px;
+  font-size: 15px;
+  padding: 0 6px;
+}
+
+.seg-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.seg-dist-text {
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+
+.seg-calc-banner {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* Timeline Preview */
+.timeline-container {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-top: 14px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.timeline-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.timeline-note {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.timeline-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 12px;
+}
+
+.timeline-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.timeline-seg.warmup { background: var(--accent-blue); }
+.timeline-seg.interval { background: var(--accent-orange); }
+.timeline-seg.recovery { background: var(--accent-green); }
+.timeline-seg.cooldown { background: var(--accent-purple); }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+
+.stat-box {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+}
+
+.stat-box.highlight {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.stat-lbl {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.stat-box.highlight .stat-val {
+  color: var(--accent-green);
+}
+
+/* Checkbox Row */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-blue);
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.btn-lg {
+  height: 50px;
+  font-size: 15px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+}
+
+.btn-sm {
+  height: 40px;
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+.btn-xs {
+  height: 32px;
+  font-size: 11px;
+  padding: 0 8px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+}
+
+.btn-secondary {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-main);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--accent-red);
+}
+
+.btn-text {
+  background: none;
+  color: var(--accent-blue);
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.btn-close {
+  background: none;
+  font-size: 22px;
+  color: var(--text-dim);
+  padding: 0 4px;
+}
+
+/* Action Section & Loader */
+.action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loader-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--accent-blue);
+  padding: 10px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(56, 189, 248, 0.3);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Results & Downloads */
+.ios-share-box {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  text-align: center;
+}
+
+.share-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.dl-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dl-buttons-grid button:first-child {
+  grid-column: span 2;
+}
+
+/* Lap Table */
+.laps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.laps-table-container {
+  overflow-x: auto;
+  margin-top: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.laps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: center;
+}
+
+.laps-table th {
+  background: rgba(15, 23, 42, 0.7);
+  padding: 6px 4px;
+  color: var(--text-dim);
+  font-weight: 600;
+  border-bottom: 1px solid var(--bg-card-border);
+}
+
+.laps-table td {
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #1e293b;
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-card);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  color: var(--text-main);
+}
+
+.modal-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 6px 0 14px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 12px 0 24px;
+}
+
+/* Helpers */
+.hidden { display: none !important; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+
+</style>
+  <!-- Bundled JSZip for downloading all files as a single ZIP on mobile -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header with Dynamic Island safe spacing -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="app-logo">⚡</span>
+        <div>
+          <h1 class="app-title">FitSync Mobile</h1>
+          <p class="app-subtitle">100% Client-Side FIT Interval &amp; Treadmill Rebuilder</p>
+        </div>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="device-pill-text">Amazfit T-Rex 3</span>
+      </div>
+    </header>
+
+    <!-- Step 1: File Selection -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">1</span>
+        <h2>Select Workout Files (A.fit &amp; Q.fit)</h2>
+      </div>
+      <p class="card-desc">
+        Select your watch file (<strong>A.fit</strong>) and optionally your treadmill/sensor file (<strong>Q.fit</strong>) from iOS <strong>Files / iCloud Drive</strong>.
+      </p>
+
+      <div class="dual-file-grid">
+        <!-- A.fit Selector -->
+        <div class="file-picker-box">
+          <div class="file-picker-header">
+            <span class="file-picker-title">⌚ Watch File (A.fit)</span>
+            <span class="tag-required">Required</span>
+          </div>
+          <div id="a-dropzone" class="dropzone small-dropzone">
+            <div class="dropzone-icon">📥</div>
+            <div class="dropzone-text">Tap for <strong>A.fit</strong></div>
+            <div class="dropzone-hint">Watch HR &amp; Cadence</div>
+            <input type="file" id="a-file-input" accept=".fit" style="display: none;">
+          </div>
+          <div id="a-status-box" class="file-status-box hidden">
+            <div class="file-info-header">
+              <span class="file-name" id="a-file-name-text">A.fit</span>
+              <button type="button" id="a-change-btn" class="btn-text">Change</button>
+            </div>
+            <div class="file-meta-grid">
+              <div><span class="meta-label">Records</span><span class="meta-val" id="a-records-count">--</span></div>
+              <div><span class="meta-label">Duration</span><span class="meta-val" id="a-duration-text">--:--</span></div>
+              <div><span class="meta-label">HR</span><span class="meta-val" id="a-hr-range">--</span></div>
+              <div><span class="meta-label">Still</span><span class="meta-val" id="a-stationary-count">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q.fit Selector -->
+        <div class="file-picker-box">
+          <div class="file-picker-header">
+            <span class="file-picker-title">🏃 Treadmill File (Q.fit)</span>
+            <span class="tag-optional">Optional</span>
+          </div>
+          <div id="q-dropzone" class="dropzone small-dropzone">
+            <div class="dropzone-icon">📥</div>
+            <div class="dropzone-text">Tap for <strong>Q.fit</strong></div>
+            <div class="dropzone-hint">Treadmill Sensor Speeds</div>
+            <input type="file" id="q-file-input" accept=".fit" style="display: none;">
+          </div>
+          <div id="q-status-box" class="file-status-box hidden">
+            <div class="file-info-header">
+              <span class="file-name" id="q-file-name-text" style="color: var(--accent-cyan);">Q.fit</span>
+              <button type="button" id="q-change-btn" class="btn-text">Change</button>
+            </div>
+            <div class="file-meta-grid">
+              <div><span class="meta-label">Records</span><span class="meta-val" id="q-records-count">--</span></div>
+              <div><span class="meta-label">Duration</span><span class="meta-val" id="q-duration-text">--:--</span></div>
+              <div><span class="meta-label">Max Spd</span><span class="meta-val" id="q-max-spd">--</span></div>
+              <div><span class="meta-label">Phases</span><span class="meta-val" id="q-phases-count">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync Banner (When both files or Q is selected) -->
+      <div id="sync-banner" class="sync-banner-card hidden">
+        <div class="sync-banner-head">
+          <span>🔄 Sync &amp; Interval Analysis (A.fit &amp; Q.fit)</span>
+        </div>
+        <div class="sync-banner-body">
+          <p id="sync-desc-text" style="font-size: 11px; line-height: 1.4; color: var(--text-muted);"></p>
+          <div id="sync-action-row" class="sync-action-row hidden" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span id="sync-phases-pill" class="phases-pill">-- intervals detected</span>
+            <button type="button" id="autofill-q-btn" class="btn-sm btn-primary">⚡ Auto-Fill Structure from Q.fit</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Workout Structure -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">2</span>
+        <h2>Running Structure &amp; Intervals</h2>
+      </div>
+
+      <!-- Saved Profiles Toolbar -->
+      <div class="profiles-bar">
+        <div class="profiles-title">
+          <span>📁 Saved Profiles</span>
+          <button type="button" id="save-profile-btn" class="btn-xs btn-primary">💾 Save Current</button>
+        </div>
+        <div class="profiles-row">
+          <select id="saved-profiles-select">
+            <option value="">-- Select Saved Profile --</option>
+          </select>
+          <button type="button" id="load-profile-btn" class="btn-xs btn-secondary">Load</button>
+          <button type="button" id="delete-profile-btn" class="btn-xs btn-danger">🗑️</button>
+          <button type="button" id="export-profiles-btn" class="btn-xs btn-secondary" title="Export as JSON">📤</button>
+        </div>
+      </div>
+
+      <!-- Segmented Mode Control -->
+      <div class="mode-tabs">
+        <button type="button" id="mode-repeats-btn" class="tab-btn active">🔁 Structured Repeats</button>
+        <button type="button" id="mode-segments-btn" class="tab-btn">📋 Manual Segments</button>
+      </div>
+
+      <!-- TAB 1: Structured Repeats Form -->
+      <div id="repeats-pane" class="tab-pane">
+        <!-- Quick Presets -->
+        <label class="section-label">Quick Presets (1-Tap Shortcuts):</label>
+        <div class="presets-scroll" id="presets-container">
+          <button type="button" class="preset-chip active" data-preset="0">3×10m @ 13.7 (12km)</button>
+          <button type="button" class="preset-chip" data-preset="1">5×3m @ 14.2 (8.4km)</button>
+          <button type="button" class="preset-chip" data-preset="2">3×5m @ 13.7 (8.4km)</button>
+          <button type="button" class="preset-chip" data-preset="3">5×6m @ 14.2 (12.1km)</button>
+        </div>
+
+        <!-- 1. Warm Up -->
+        <div class="form-block block-warmup">
+          <h3 class="block-title">🔵 1. Warm Up</h3>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Duration (min)</label>
+              <input type="number" id="wu-dur" value="14" step="0.5" min="0" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Speed (km/h)</label>
+              <input type="number" id="wu-kmh" value="10.6" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Pace (min/km)</label>
+              <input type="text" id="wu-pace" value="5:40" placeholder="5:40">
+            </div>
+            <div class="input-group align-center">
+              <span class="est-dist-badge" id="wu-dist-est">2.47 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Repeats -->
+        <div class="form-block block-repeats">
+          <h3 class="block-title">🟠 2. Interval &amp; Recovery Repeats</h3>
+          <div class="input-group mb-2">
+            <label>Number of Repeats</label>
+            <input type="number" id="rep-count" value="3" min="1" max="50" inputmode="numeric">
+          </div>
+
+          <div class="sub-block">
+            <span class="sub-block-badge active-badge">Work Interval (per set)</span>
+            <div class="form-row-3">
+              <div class="input-group">
+                <label>Time (min)</label>
+                <input type="number" id="int-dur" value="10" step="0.5" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>km/h</label>
+                <input type="number" id="int-kmh" value="13.7" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>min/km</label>
+                <input type="text" id="int-pace" value="4:23" placeholder="4:23">
+              </div>
+            </div>
+          </div>
+
+          <div class="sub-block mt-2">
+            <span class="sub-block-badge rest-badge">Recovery (per set)</span>
+            <div class="form-row-3">
+              <div class="input-group">
+                <label>Time (min)</label>
+                <input type="number" id="rec-dur" value="2" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>km/h</label>
+                <input type="number" id="rec-kmh" value="5.7" step="0.1" inputmode="decimal">
+              </div>
+              <div class="input-group">
+                <label>min/km</label>
+                <input type="text" id="rec-pace" value="10:32" placeholder="10:32">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Cool Down & Target Distance -->
+        <div class="form-block block-cooldown">
+          <h3 class="block-title">🟣 3. Cool Down &amp; Target Distance</h3>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Cool Down km/h</label>
+              <input type="number" id="cd-kmh" value="10.6" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>min/km</label>
+              <input type="text" id="cd-pace" value="5:40" placeholder="5:40">
+            </div>
+          </div>
+
+          <div class="form-row-2 mt-2">
+            <div class="input-group">
+              <label>Target Distance (km)</label>
+              <input type="number" id="target-dist" value="12.0" step="0.01" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Cool Down Mode</label>
+              <select id="cd-mode-select">
+                <option value="auto_distance" selected>Auto Target Distance</option>
+                <option value="manual">Manual Duration</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="cd-manual-group" class="input-group mt-2 hidden">
+            <label>Manual Cool Down Time (min)</label>
+            <input type="number" id="cd-manual-dur" value="12" step="0.5" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Manual Segments Form -->
+      <div id="segments-pane" class="tab-pane hidden">
+        <div class="segments-top-bar">
+          <div class="input-group" style="flex: 1;">
+            <label>Target Total Distance (km)</label>
+            <input type="number" id="seg-target-dist" value="12.0" step="0.01" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="segments-actions-grid">
+          <button type="button" id="add-segment-btn" class="btn-sm btn-primary">➕ Add Segment</button>
+          <button type="button" id="add-pair-btn" class="btn-sm btn-secondary">➕ Add Pair</button>
+          <button type="button" id="progression-btn" class="btn-sm btn-secondary" style="color: var(--accent-blue);">📈 Progression...</button>
+          <button type="button" id="recalc-final-btn" class="btn-sm btn-secondary" title="Auto-calculate final segment">⚡ Auto Final</button>
+        </div>
+
+        <!-- Segments Dynamic Container -->
+        <div id="segments-list" class="segments-list">
+          <!-- Rendered dynamically by JS -->
+        </div>
+
+        <!-- Real-time calculation banner -->
+        <div class="seg-calc-banner">
+          <div><strong>Target:</strong> <span id="banner-target">12.00 km</span></div>
+          <div><strong>Prior:</strong> <span id="banner-prior">0.00 km</span></div>
+          <div><strong>Final Seg:</strong> <span id="banner-remaining" style="color: var(--accent-purple);">0.00 km</span></div>
+        </div>
+      </div>
+
+      <!-- Live Workout Timeline -->
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <span class="timeline-title">Workout Profile Timeline</span>
+          <span class="timeline-note" id="timeline-summary-text">Live Profile</span>
+        </div>
+        <div id="timeline-bar" class="timeline-bar"></div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-lbl">Duration</div>
+            <div class="stat-val" id="prev-duration">--:--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Distance</div>
+            <div class="stat-val" id="prev-distance">-- km</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Avg Pace</div>
+            <div class="stat-val" id="prev-pace">--:--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Avg Speed</div>
+            <div class="stat-val" id="prev-speed">-- km/h</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: Device & Trim Options -->
+    <section class="card">
+      <div class="card-header">
+        <span class="step-num">3</span>
+        <h2>Device &amp; Settings</h2>
+      </div>
+
+      <div class="input-group mb-3">
+        <label>Smartwatch Device</label>
+        <select id="device-select">
+          <option value="Amazfit T-Rex 3" selected>Amazfit T-Rex 3 (Default)</option>
+          <option value="Amazfit Cheetah Pro">Amazfit Cheetah Pro</option>
+          <option value="Amazfit Balance">Amazfit Balance</option>
+          <option value="Amazfit T-Rex Ultra">Amazfit T-Rex Ultra</option>
+          <option value="Garmin Forerunner 965">Garmin Forerunner 965</option>
+          <option value="Apple Watch Ultra 2">Apple Watch Ultra 2</option>
+          <option value="COROS PACE 3">COROS PACE 3</option>
+          <option value="Custom Device">Custom Device</option>
+        </select>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="trim-stationary" checked>
+        <span>Remove all leading records of &lt; 0.3 m/s (standstill before start)</span>
+      </label>
+    </section>
+
+    <!-- Step 4: Process Button -->
+    <div class="action-section">
+      <button type="button" id="process-btn" class="btn-lg btn-primary btn-block">
+        ⚡ Process Workout &amp; Generate Files
+      </button>
+      <div id="process-loader" class="loader-box hidden">
+        <div class="spinner"></div>
+        <span>Processing FIT records &amp; synthesizing 400m track...</span>
+      </div>
+    </div>
+
+    <!-- Step 5: Output Results & Downloads -->
+    <section id="results-card" class="card results-card hidden">
+      <div class="card-header">
+        <span class="step-num" style="background: var(--accent-green);">✓</span>
+        <h2 style="color: var(--accent-green);">Workout Generated!</h2>
+      </div>
+
+      <div class="stats-grid mb-3">
+        <div class="stat-box highlight">
+          <div class="stat-lbl">Final Time</div>
+          <div class="stat-val" id="res-time">--:--</div>
+        </div>
+        <div class="stat-box highlight">
+          <div class="stat-lbl">Final Distance</div>
+          <div class="stat-val" id="res-dist">-- km</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Avg Pace</div>
+          <div class="stat-val" id="res-pace">--:--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Max Speed</div>
+          <div class="stat-val" id="res-max-spd">-- km/h</div>
+        </div>
+      </div>
+
+      <!-- iOS Share Sheet Primary Action -->
+      <div class="ios-share-box">
+        <button type="button" id="ios-share-btn" class="btn-lg btn-success btn-block">
+          📤 Open in Zepp / Share to Files
+        </button>
+        <p class="share-hint">Directly opens iOS Share Sheet to send to Zepp App, Strava, or Save to Files.</p>
+      </div>
+
+      <!-- Direct Download Buttons -->
+      <label class="section-label mt-3">Download Output Files:</label>
+      <div class="dl-buttons-grid">
+        <button type="button" id="dl-zip-btn" class="btn-sm btn-primary">📦 Download All (.ZIP)</button>
+        <button type="button" id="dl-tcx-btn" class="btn-sm btn-secondary">🌟 New.tcx (Zepp)</button>
+        <button type="button" id="dl-fit-gps-btn" class="btn-sm btn-secondary">🗺️ New_gps.fit</button>
+        <button type="button" id="dl-fit-indoor-btn" class="btn-sm btn-secondary">⌚ New.fit (Indoor)</button>
+        <button type="button" id="dl-tcx-indoor-btn" class="btn-sm btn-secondary">📄 New_indoor.tcx</button>
+        <button type="button" id="dl-gpx-btn" class="btn-sm btn-secondary">📍 New.gpx</button>
+        <button type="button" id="dl-csv-btn" class="btn-sm btn-secondary">📊 New.csv</button>
+      </div>
+
+      <!-- Lap Breakdown Table -->
+      <div class="laps-header">
+        <h3 class="block-title">Interval Laps &amp; Biometrics</h3>
+        <button type="button" id="toggle-laps-btn" class="btn-text">Show Laps</button>
+      </div>
+      <div id="laps-container" class="laps-table-container hidden">
+        <table class="laps-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Phase</th>
+              <th>Time</th>
+              <th>Pace</th>
+              <th>Dist</th>
+              <th>HR</th>
+              <th>Cad</th>
+            </tr>
+          </thead>
+          <tbody id="laps-tbody">
+            <!-- Rows populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Progression Helper Modal -->
+    <div id="progression-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>📈 Progression Generator</h3>
+          <button type="button" id="close-prog-modal-btn" class="btn-close">&times;</button>
+        </div>
+        <p class="modal-sub">Quickly create progressive speed segments (e.g. 11.0 &rarr; 14.0 km/h).</p>
+        <div class="modal-form">
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Start Speed (km/h)</label>
+              <input type="number" id="prog-start-spd" value="11.0" step="0.5" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>End Speed (km/h)</label>
+              <input type="number" id="prog-end-spd" value="14.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Step Increment (km/h)</label>
+              <input type="number" id="prog-step-spd" value="0.5" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-group">
+              <label>Step Duration (min)</label>
+              <input type="number" id="prog-step-dur" value="3.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="input-group">
+              <label>Include Recovery?</label>
+              <select id="prog-include-rec">
+                <option value="no">No (Continuous)</option>
+                <option value="yes">Yes (After each step)</option>
+              </select>
+            </div>
+            <div class="input-group" id="prog-rec-dur-group" style="display: none;">
+              <label>Recovery (min)</label>
+              <input type="number" id="prog-rec-dur" value="1.0" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-prog-btn" class="btn-sm btn-secondary">Cancel</button>
+          <button type="button" id="apply-prog-btn" class="btn-sm btn-primary">Apply Progression</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Profile Modal -->
+    <div id="save-profile-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>💾 Save Workout Profile</h3>
+          <button type="button" id="close-save-modal-btn" class="btn-close">&times;</button>
+        </div>
+        <div class="input-group mt-2">
+          <label>Profile Title</label>
+          <input type="text" id="save-profile-title" placeholder="e.g. 3x10m Threshold (12km)">
+        </div>
+        <div class="modal-footer mt-3">
+          <button type="button" id="cancel-save-modal-btn" class="btn-sm btn-secondary">Cancel</button>
+          <button type="button" id="confirm-save-profile-btn" class="btn-sm btn-primary">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <p>FitSync Studio Mobile • Optimized for iPhone 15 Pro Max • GitHub Pages Ready</p>
+    </footer>
+  </div>
+
+  <script>
+/**
+ * FitSync Mobile - High-Performance Client-Side FIT Engine
+ * 100% Pure Client-Side JavaScript Engine for Garmin / Amazfit FIT files.
+ * Works entirely in Safari on iPhone 15 Pro Max & desktop browsers with ZERO server dependencies.
+ * 
+ * Features:
+ * - Binary FIT Protocol 2.0 Decoder (reads records, heart rate, cadence, speed, distance)
+ * - Contiguous leading stationary records trimmer (< 0.3 m/s)
+ * - Workout plan synthesizer (Structured Repeats & Manual Segments / Progression)
+ * - Target distance auto-calculation for final segment
+ * - Olympic 400m Stadium GPS Track Coordinate Synthesizer
+ * - Exporters:
+ *   - New.tcx (Zepp / Strava / Garmin Connect format with laps, GPS trackpoints & telemetry)
+ *   - New_indoor.tcx (Clean treadmill TCX without GPS coordinates)
+ *   - New.gpx (Standard GPX 1.1 with TrackPointExtension)
+ *   - New.csv (FitCSVTool compatible CSV)
+ *   - New.fit & New_gps.fit (Binary FIT format with 14-byte header and Garmin CRC-16)
+ */
+
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.FitEngine = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+
+  // --- Constants ---
+  const FIT_EPOCH_OFFSET = 631065600; // Seconds between 1970-01-01 and 1989-12-31
+
+  // Garmin FIT CRC-16 lookup table
+  const CRC_TABLE = [
+    0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
+    0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400
+  ];
+
+  function updateCrc(crc, byte) {
+    let tmp = CRC_TABLE[crc & 0xF];
+    crc = (crc >> 4) & 0x0FFF;
+    crc = crc ^ tmp ^ CRC_TABLE[byte & 0xF];
+
+    tmp = CRC_TABLE[crc & 0xF];
+    crc = (crc >> 4) & 0x0FFF;
+    crc = crc ^ tmp ^ CRC_TABLE[(byte >> 4) & 0xF];
+    return crc;
+  }
+
+  function computeCrc(uint8Array, start = 0, end = uint8Array.length) {
+    let crc = 0;
+    for (let i = start; i < end; i++) {
+      crc = updateCrc(crc, uint8Array[i]);
+    }
+    return crc;
+  }
+
+  // --- Date & Time Helpers ---
+  function fitTsToIso(fitTs) {
+    const unixMs = (parseInt(fitTs, 10) + FIT_EPOCH_OFFSET) * 1000;
+    return new Date(unixMs).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+
+  function formatDuration(sec) {
+    const s = Math.round(sec);
+    const m = Math.floor(s / 60);
+    const remS = s % 60;
+    return `${m}:${remS.toString().padStart(2, '0')}`;
+  }
+
+  // --- Pace & Speed Helpers ---
+  function kmhToMs(kmh) {
+    return (parseFloat(kmh) || 0) / 3.6;
+  }
+
+  function msToKmh(ms) {
+    return parseFloat(((parseFloat(ms) || 0) * 3.6).toFixed(2));
+  }
+
+  function kmhToPaceStr(kmh) {
+    const k = parseFloat(kmh);
+    if (!k || k <= 0.1) return '--:--';
+    const secPerKm = 3600.0 / k;
+    let mins = Math.floor(secPerKm / 60);
+    let secs = Math.round(secPerKm % 60);
+    if (secs === 60) {
+      mins += 1;
+      secs = 0;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function paceStrToKmh(paceStr) {
+    if (!paceStr) return 0;
+    const clean = paceStr.replace(/[^0-9.:]/g, '').trim();
+    if (clean.includes(':')) {
+      const parts = clean.split(':');
+      const mins = parseInt(parts[0], 10) || 0;
+      const secs = parseFloat(parts[1]) || 0;
+      const totalSec = mins * 60 + secs;
+      if (totalSec <= 0) return 0;
+      return parseFloat((3600.0 / totalSec).toFixed(2));
+    }
+    const val = parseFloat(clean);
+    if (val > 0 && val < 30) {
+      const totalSec = val * 60;
+      return parseFloat((3600.0 / totalSec).toFixed(2));
+    }
+    return 0;
+  }
+
+  // --- 400m Olympic Track Coordinate Synthesizer ---
+  function getTrackCoords(distM, centerLat = 3.139000, centerLon = 101.686900) {
+    const L_s = 84.39;
+    const R = (400.0 - 2.0 * L_s) / (2.0 * Math.PI); // ~36.7997 m
+    const arc = Math.PI * R; // ~115.61 m
+    const s = ((distM % 400.0) + 400.0) % 400.0;
+
+    let x, y;
+    if (s < L_s) {
+      x = R;
+      y = -L_s / 2.0 + s;
+    } else if (s < L_s + arc) {
+      const phi = ((s - L_s) / arc) * Math.PI;
+      x = R * Math.cos(phi);
+      y = L_s / 2.0 + R * Math.sin(phi);
+    } else if (s < 2.0 * L_s + arc) {
+      x = -R;
+      y = L_s / 2.0 - (s - L_s - arc);
+    } else {
+      const phi = ((s - 2.0 * L_s - arc) / arc) * Math.PI;
+      x = -R * Math.cos(phi);
+      y = -L_s / 2.0 - R * Math.sin(phi);
+    }
+
+    const lat = centerLat + (y / 111320.0);
+    const lon = centerLon + (x / (111320.0 * Math.cos(centerLat * Math.PI / 180.0)));
+    return {
+      lat: parseFloat(lat.toFixed(7)),
+      lon: parseFloat(lon.toFixed(7)),
+      semilat: Math.round(lat * (2147483648 / 180.0)),
+      semilon: Math.round(lon * (2147483648 / 180.0))
+    };
+  }
+
+  // --- Binary FIT Decoder ---
+  function decodeFitBinary(arrayBuffer) {
+    const view = new DataView(arrayBuffer);
+    const uint8 = new Uint8Array(arrayBuffer);
+
+    if (uint8.length < 14) {
+      throw new Error('FIT file too short (minimum 14 bytes header)');
+    }
+
+    const headerSize = view.getUint8(0);
+    const protoVer = view.getUint8(1);
+    const profVer = view.getUint16(2, true);
+    const dataSize = view.getUint32(4, true);
+    const tag = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11));
+
+    if (tag !== '.FIT') {
+      throw new Error(`Invalid FIT file signature: "${tag}" (expected ".FIT")`);
+    }
+
+    const defs = {};
+    const records = [];
+    let fileId = null;
+    let deviceInfo = null;
+    let lastTimestamp = 0;
+
+    let pos = headerSize;
+    const endPos = Math.min(uint8.length - 2, headerSize + dataSize);
+
+    while (pos < endPos) {
+      const rh = view.getUint8(pos++);
+
+      if ((rh & 0x80) !== 0) {
+        // Compressed Timestamp Header
+        const localType = (rh >> 5) & 0x03;
+        const timeOffset = rh & 0x1F;
+        const def = defs[localType];
+        if (!def) {
+          break; // Unknown definition
+        }
+        // Timestamp rollover calculation
+        const curOffset = lastTimestamp & 0x1F;
+        let ts = (lastTimestamp & 0xFFFFFFE0) | timeOffset;
+        if (timeOffset < curOffset) {
+          ts += 0x20;
+        }
+        lastTimestamp = ts;
+
+        const recData = parseDataMessage(view, pos, def, ts);
+        if (def.globalId === 20) {
+          records.push(recData);
+        }
+        pos += def.totalSize;
+      } else {
+        // Normal Header
+        const isDefinition = (rh & 0x40) !== 0;
+        const hasDeveloper = (rh & 0x20) !== 0;
+        const localType = rh & 0x0F;
+
+        if (isDefinition) {
+          if (pos + 5 > endPos) break;
+          const reserved = view.getUint8(pos++);
+          const arch = view.getUint8(pos++); // 0 = LE, 1 = BE
+          const isLE = (arch === 0);
+          const globalId = view.getUint16(pos, isLE);
+          pos += 2;
+          const numFields = view.getUint8(pos++);
+
+          const fields = [];
+          let totalSize = 0;
+          for (let f = 0; f < numFields; f++) {
+            if (pos + 3 > endPos) break;
+            const fNum = view.getUint8(pos++);
+            const fSize = view.getUint8(pos++);
+            const fType = view.getUint8(pos++);
+            fields.push({ num: fNum, size: fSize, type: fType });
+            totalSize += fSize;
+          }
+
+          if (hasDeveloper) {
+            if (pos < endPos) {
+              const numDev = view.getUint8(pos++);
+              for (let df = 0; df < numDev; df++) {
+                if (pos + 3 > endPos) break;
+                const dfNum = view.getUint8(pos++);
+                const dfSize = view.getUint8(pos++);
+                const dfIdx = view.getUint8(pos++);
+                totalSize += dfSize;
+              }
+            }
+          }
+
+          defs[localType] = { globalId, fields, totalSize, isLE };
+        } else {
+          // Data message
+          const def = defs[localType];
+          if (!def) {
+            break; // Cannot read without definition
+          }
+
+          const recData = parseDataMessage(view, pos, def, null);
+          if (recData && recData.timestamp) {
+            lastTimestamp = recData.timestamp;
+          }
+
+          if (def.globalId === 20) {
+            // Global 20 = record
+            records.push(recData);
+          } else if (def.globalId === 0 && !fileId) {
+            // Global 0 = file_id
+            fileId = recData;
+          } else if (def.globalId === 23 && !deviceInfo) {
+            // Global 23 = device_info
+            deviceInfo = recData;
+          }
+
+          pos += def.totalSize;
+        }
+      }
+    }
+
+    return {
+      records,
+      fileId,
+      deviceInfo,
+      header: { headerSize, protoVer, profVer, dataSize }
+    };
+  }
+
+  function parseDataMessage(view, offset, def, compressedTs) {
+    let p = offset;
+    const isLE = def.isLE;
+    const data = {};
+
+    if (compressedTs !== null) {
+      data.timestamp = compressedTs;
+    }
+
+    for (let i = 0; i < def.fields.length; i++) {
+      const f = def.fields[i];
+      let val = null;
+
+      try {
+        switch (f.type & 0x7F) {
+          case 0: // enum
+          case 2: // uint8
+            if (f.size === 1) val = view.getUint8(p);
+            break;
+          case 1: // sint8
+            if (f.size === 1) val = view.getInt8(p);
+            break;
+          case 3: // sint16
+            if (f.size === 2) val = view.getInt16(p, isLE);
+            break;
+          case 4: // uint16
+            if (f.size === 2) val = view.getUint16(p, isLE);
+            break;
+          case 5: // sint32
+            if (f.size === 4) val = view.getInt32(p, isLE);
+            break;
+          case 6: // uint32
+            if (f.size === 4) val = view.getUint32(p, isLE);
+            break;
+          case 7: // string
+            {
+              let str = '';
+              for (let s = 0; s < f.size; s++) {
+                const b = view.getUint8(p + s);
+                if (b === 0) break;
+                str += String.fromCharCode(b);
+              }
+              val = str;
+            }
+            break;
+          case 8: // float32
+            if (f.size === 4) val = view.getFloat32(p, isLE);
+            break;
+          case 9: // float64
+            if (f.size === 8) val = view.getFloat64(p, isLE);
+            break;
+          case 10: // uint8z
+            if (f.size === 1) val = view.getUint8(p);
+            break;
+          case 11: // uint16z
+            if (f.size === 2) val = view.getUint16(p, isLE);
+            break;
+          case 12: // uint32z
+            if (f.size === 4) val = view.getUint32(p, isLE);
+            break;
+          default:
+            val = null;
+        }
+      } catch (e) {
+        val = null;
+      }
+
+      // Map common record fields (globalId 20)
+      if (def.globalId === 20) {
+        if (f.num === 253 && val !== null) data.timestamp = val;
+        else if (f.num === 3 && val !== null && val !== 255) data.heart_rate = val;
+        else if (f.num === 4 && val !== null && val !== 255) data.cadence = val;
+        else if (f.num === 39 && val !== null && val !== 65535) data.cadence = Math.round(val / 256.0); // cadence256
+        else if (f.num === 5 && val !== null && val !== 4294967295) data.distance = val / 100.0; // meters
+        else if (f.num === 6 && val !== null && val !== 65535) data.speed = val / 1000.0; // m/s
+        else if (f.num === 73 && val !== null && val !== 4294967295) data.speed = val / 1000.0; // enhanced_speed
+        else if (f.num === 0 && val !== null && val !== 2147483647) data.lat = val * (180.0 / 2147483648);
+        else if (f.num === 1 && val !== null && val !== 2147483647) data.lon = val * (180.0 / 2147483648);
+      } else {
+        data[`f_${f.num}`] = val;
+      }
+
+      p += f.size;
+    }
+
+    return data;
+  }
+
+  // --- Speed Phases & Synchronization Analysis (A.fit vs Q.fit) ---
+  function detectSpeedPhases(records, minDurationSec = 20) {
+    if (!records || records.length === 0) return [];
+
+    const speeds = records.map(r => parseFloat(r.speed || 0) || 0);
+    const runs = [];
+    let curSpeed = speeds[0];
+    let curCount = 0;
+    let curStartIdx = 0;
+
+    for (let i = 0; i < speeds.length; i++) {
+      const s = speeds[i];
+      if (Math.abs(s - curSpeed) < 0.05) {
+        curCount++;
+      } else {
+        if (curCount >= minDurationSec) {
+          runs.push({
+            speed_ms: parseFloat(curSpeed.toFixed(3)),
+            speed_kmh: msToKmh(curSpeed),
+            pace_str: kmhToPaceStr(msToKmh(curSpeed)),
+            duration_sec: curCount,
+            duration_min: parseFloat((curCount / 60.0).toFixed(2)),
+            start_idx: curStartIdx,
+            end_idx: curStartIdx + curCount - 1
+          });
+        }
+        curSpeed = s;
+        curCount = 1;
+        curStartIdx = i;
+      }
+    }
+
+    if (curCount >= minDurationSec) {
+      runs.push({
+        speed_ms: parseFloat(curSpeed.toFixed(3)),
+        speed_kmh: msToKmh(curSpeed),
+        pace_str: kmhToPaceStr(msToKmh(curSpeed)),
+        duration_sec: curCount,
+        duration_min: parseFloat((curCount / 60.0).toFixed(2)),
+        start_idx: curStartIdx,
+        end_idx: curStartIdx + curCount - 1
+      });
+    }
+
+    return runs;
+  }
+
+  function analyzeSync(aRecords, qRecords) {
+    if (!aRecords || !qRecords || aRecords.length === 0 || qRecords.length === 0) {
+      return { has_sync: false, error: 'One or both files contain no records.' };
+    }
+
+    const aFirstTs = parseInt(aRecords[0].timestamp || 0, 10);
+    const qFirstTs = parseInt(qRecords[0].timestamp || 0, 10);
+    const clockOffset = qFirstTs - aFirstTs;
+
+    // Movement start detection (speed >= 0.3 m/s or cadence >= 40)
+    let aMoveIdx = 0;
+    for (let i = 0; i < aRecords.length; i++) {
+      if ((aRecords[i].speed || 0) >= 0.3 || (aRecords[i].cadence || 0) >= 40) {
+        aMoveIdx = i;
+        break;
+      }
+    }
+
+    let qMoveIdx = 0;
+    for (let i = 0; i < qRecords.length; i++) {
+      if ((qRecords[i].speed || 0) >= 0.3 || (qRecords[i].cadence || 0) >= 40) {
+        qMoveIdx = i;
+        break;
+      }
+    }
+
+    const aMoveTs = parseInt(aRecords[aMoveIdx]?.timestamp || aFirstTs, 10);
+    const qMoveTs = parseInt(qRecords[qMoveIdx]?.timestamp || qFirstTs, 10);
+    const movementOffsetClock = qMoveTs - aMoveTs;
+
+    // Detect speed phases in Q
+    const qPhases = detectSpeedPhases(qRecords, 20);
+
+    // Stationary records at start of A
+    let aStationaryCount = 0;
+    for (let i = 0; i < Math.min(60, aRecords.length); i++) {
+      if ((aRecords[i].speed || 0) < 0.3) {
+        aStationaryCount++;
+      } else {
+        break;
+      }
+    }
+
+    return {
+      has_sync: true,
+      a_total_records: aRecords.length,
+      q_total_records: qRecords.length,
+      a_start_ts: aFirstTs,
+      q_start_ts: qFirstTs,
+      clock_offset_sec: clockOffset,
+      a_movement_index: aMoveIdx,
+      q_movement_index: qMoveIdx,
+      movement_offset_sec: movementOffsetClock,
+      a_leading_stationary_count: aStationaryCount,
+      detected_q_phases: qPhases
+    };
+  }
+
+  // --- Workout Building & Plan Synthesis ---
+  function buildWorkoutPlan(config) {
+    const { mode } = config;
+
+    if (mode === 'custom_segments') {
+      return buildCustomSegmentsPlan(config);
+    } else {
+      return buildRepeatsPlan(config);
+    }
+  }
+
+  function buildRepeatsPlan(config) {
+    const warmupDur = Math.round((parseFloat(config.warmupMin) || 0) * 60);
+    const warmupSpd = kmhToMs(config.warmupKmh || 10.6);
+
+    const repeats = parseInt(config.repeats, 10) || 3;
+    const intDur = Math.round((parseFloat(config.intMin) || 0) * 60);
+    const intSpd = kmhToMs(config.intKmh || 13.7);
+
+    const recDur = Math.round((parseFloat(config.recMin) || 0) * 60);
+    const recSpd = kmhToMs(config.recKmh || 5.7);
+
+    const cdSpd = kmhToMs(config.cdKmh || 10.6);
+    const cdMode = config.cdMode || 'auto_distance';
+    const targetDistM = (parseFloat(config.targetDistKm) || 0) * 1000.0;
+
+    let priorDistM = warmupDur * warmupSpd;
+    priorDistM += repeats * (intDur * intSpd + recDur * recSpd);
+
+    let cdDur = 0;
+    if (cdMode === 'auto_distance' && targetDistM > 0) {
+      const remDist = Math.max(0, targetDistM - priorDistM);
+      if (cdSpd > 0) {
+        cdDur = Math.round(remDist / cdSpd);
+      }
+    } else {
+      cdDur = Math.round((parseFloat(config.cdManualMin) || 0) * 60);
+    }
+
+    const laps = [];
+    const targetSpeeds = [];
+
+    // 1. Warm Up
+    if (warmupDur > 0) {
+      laps.push({
+        phase: 'Warm Up',
+        duration: warmupDur,
+        speed_ms: warmupSpd,
+        speed_kmh: msToKmh(warmupSpd),
+        pace_str: kmhToPaceStr(msToKmh(warmupSpd)),
+        intensity: 'Active'
+      });
+      for (let i = 0; i < warmupDur; i++) targetSpeeds.push(warmupSpd);
+    }
+
+    // 2. Repeats
+    for (let r = 0; r < repeats; r++) {
+      if (intDur > 0) {
+        laps.push({
+          phase: `Interval ${r + 1}`,
+          duration: intDur,
+          speed_ms: intSpd,
+          speed_kmh: msToKmh(intSpd),
+          pace_str: kmhToPaceStr(msToKmh(intSpd)),
+          intensity: 'Active'
+        });
+        for (let i = 0; i < intDur; i++) targetSpeeds.push(intSpd);
+      }
+      if (recDur > 0) {
+        laps.push({
+          phase: `Recovery ${r + 1}`,
+          duration: recDur,
+          speed_ms: recSpd,
+          speed_kmh: msToKmh(recSpd),
+          pace_str: kmhToPaceStr(msToKmh(recSpd)),
+          intensity: 'Resting'
+        });
+        for (let i = 0; i < recDur; i++) targetSpeeds.push(recSpd);
+      }
+    }
+
+    // 3. Cool Down
+    if (cdDur > 0) {
+      laps.push({
+        phase: 'Cool Down',
+        duration: cdDur,
+        speed_ms: cdSpd,
+        speed_kmh: msToKmh(cdSpd),
+        pace_str: kmhToPaceStr(msToKmh(cdSpd)),
+        intensity: 'Active'
+      });
+      for (let i = 0; i < cdDur; i++) targetSpeeds.push(cdSpd);
+    }
+
+    return { laps, targetSpeeds };
+  }
+
+  function buildCustomSegmentsPlan(config) {
+    const rawSegments = config.segments || [];
+    const targetDistM = (parseFloat(config.targetDistKm) || 0) * 1000.0;
+    const autoCalcFinal = config.autoCalcFinal !== false;
+
+    if (rawSegments.length === 0) {
+      return { laps: [], targetSpeeds: [] };
+    }
+
+    // Prior distance calculation
+    const num = rawSegments.length;
+    let priorDistM = 0;
+    for (let i = 0; i < num - 1; i++) {
+      const s = rawSegments[i];
+      const dur = Math.round((parseFloat(s.durationMin) || 0) * 60);
+      const spd = kmhToMs(s.speedKmh || 0);
+      priorDistM += dur * spd;
+    }
+
+    const lastSeg = Object.assign({}, rawSegments[num - 1]);
+    let lastDur = Math.round((parseFloat(lastSeg.durationMin) || 0) * 60);
+    const lastSpd = kmhToMs(lastSeg.speedKmh || 0);
+
+    if (autoCalcFinal && targetDistM > 0 && lastSeg.autoCalc) {
+      const remDist = Math.max(0, targetDistM - priorDistM);
+      if (lastSpd > 0) {
+        lastDur = Math.round(remDist / lastSpd);
+        lastSeg.durationMin = parseFloat((lastDur / 60.0).toFixed(2));
+      }
+    }
+
+    const laps = [];
+    const targetSpeeds = [];
+
+    for (let i = 0; i < num; i++) {
+      const s = (i === num - 1) ? lastSeg : rawSegments[i];
+      const dur = (i === num - 1) ? lastDur : Math.round((parseFloat(s.durationMin) || 0) * 60);
+      const spd = kmhToMs(s.speedKmh || 0);
+      if (dur <= 0) continue;
+
+      laps.push({
+        phase: s.name || `Segment ${i + 1}`,
+        duration: dur,
+        speed_ms: spd,
+        speed_kmh: msToKmh(spd),
+        pace_str: kmhToPaceStr(msToKmh(spd)),
+        intensity: s.intensity || 'Active'
+      });
+
+      for (let j = 0; j < dur; j++) {
+        targetSpeeds.push(spd);
+      }
+    }
+
+    return { laps, targetSpeeds };
+  }
+
+  // --- Full Processing Pipeline ---
+  function processWorkout(sourceFitBuffer, config) {
+    const {
+      trimStationary = true,
+      stationaryThreshold = 0.3,
+      deviceType = 'Amazfit T-Rex 3',
+      centerLat = 3.139000,
+      centerLon = 101.686900
+    } = config;
+
+    // 1. Decode A.fit
+    const decoded = decodeFitBinary(sourceFitBuffer);
+    let recs = decoded.records;
+    if (!recs || recs.length === 0) {
+      throw new Error('No record messages found in uploaded FIT file.');
+    }
+
+    // 2. Trim leading stationary records (< 0.3 m/s)
+    let droppedCount = 0;
+    if (trimStationary) {
+      const maxDroppable = Math.max(0, recs.length - 10);
+      for (let i = 0; i < maxDroppable; i++) {
+        const s = recs[i].speed !== undefined ? recs[i].speed : 0;
+        const cad = recs[i].cadence !== undefined ? recs[i].cadence : 0;
+        if (s < stationaryThreshold && cad < 40) {
+          droppedCount++;
+        } else {
+          break;
+        }
+      }
+    }
+    const trimmedRecs = recs.slice(droppedCount);
+
+    // 3. Build workout schedule
+    const plan = buildWorkoutPlan(config);
+    const targetSpeeds = plan.targetSpeeds;
+    const totalRecords = targetSpeeds.length;
+
+    if (totalRecords === 0) {
+      throw new Error('Workout plan has 0 seconds duration. Please configure intervals.');
+    }
+
+    const startTs = (trimmedRecs[0] && trimmedRecs[0].timestamp) ? trimmedRecs[0].timestamp : 1000000000;
+
+    // 4. Pad or trim records to match totalRecords
+    const finalRecs = [];
+    const sourceLen = trimmedRecs.length;
+    const lastRec = trimmedRecs[sourceLen - 1] || { heart_rate: 140, cadence: 88 };
+
+    for (let i = 0; i < totalRecords; i++) {
+      let r;
+      if (i < sourceLen) {
+        r = Object.assign({}, trimmedRecs[i]);
+      } else {
+        r = Object.assign({}, lastRec);
+      }
+
+      const spd = targetSpeeds[i];
+      r.timestamp = startTs + i;
+      r.calc_speed = spd;
+      r.heart_rate = r.heart_rate || 140;
+      r.cadence = r.cadence || 88;
+
+      finalRecs.push(r);
+    }
+
+    // 5. Update cumulative distance & track GPS coordinates
+    let cumDist = 0.0;
+    for (let i = 0; i < totalRecords; i++) {
+      const r = finalRecs[i];
+      cumDist += r.calc_speed;
+      r.calc_distance = cumDist;
+
+      const track = getTrackCoords(cumDist, centerLat, centerLon);
+      r.lat = track.lat;
+      r.lon = track.lon;
+      r.semilat = track.semilat;
+      r.semilon = track.semilon;
+    }
+
+    // 6. Build Lap Summaries with Real HR & Cadence
+    let recPtr = 0;
+    let currLapStart = startTs;
+    const lapsSummary = [];
+
+    for (let i = 0; i < plan.laps.length; i++) {
+      const spec = plan.laps[i];
+      const dur = spec.duration;
+      const spd = spec.speed_ms;
+      const dist = dur * spd;
+
+      const lapRecs = finalRecs.slice(recPtr, recPtr + dur);
+      const hrs = lapRecs.map(x => x.heart_rate).filter(x => x && x > 30);
+      const cads = lapRecs.map(x => x.cadence).filter(x => x && x > 20);
+
+      const avgHr = hrs.length > 0 ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : 140;
+      const maxHr = hrs.length > 0 ? Math.max(...hrs) : 150;
+      const avgCad = cads.length > 0 ? Math.round(cads.reduce((a, b) => a + b, 0) / cads.length) : 88;
+
+      let lapCalories = Math.round(dur * (spd / 2.944) * 0.14);
+      if (lapCalories < 5) lapCalories = 5;
+
+      lapsSummary.push({
+        lap_index: i,
+        phase: spec.phase,
+        duration_sec: dur,
+        duration_str: formatDuration(dur),
+        speed_kmh: spec.speed_kmh,
+        pace_str: spec.pace_str,
+        distance_m: Math.round(dist * 100) / 100,
+        avg_hr: avgHr,
+        max_hr: maxHr,
+        avg_cadence: avgCad,
+        calories: lapCalories,
+        intensity: spec.intensity || 'Active',
+        start_time: currLapStart
+      });
+
+      currLapStart += dur;
+      recPtr += dur;
+    }
+
+    const totalDistM = cumDist;
+    const avgSpdMs = totalDistM / totalRecords;
+
+    const workoutResult = {
+      success: true,
+      total_records: totalRecords,
+      total_time_sec: totalRecords,
+      total_time_str: formatDuration(totalRecords),
+      total_distance_m: Math.round(totalDistM * 100) / 100,
+      total_distance_km: parseFloat((totalDistM / 1000.0).toFixed(3)),
+      avg_speed_kmh: parseFloat((avgSpdMs * 3.6).toFixed(2)),
+      avg_pace_str: kmhToPaceStr(avgSpdMs * 3.6),
+      max_speed_kmh: parseFloat((Math.max(...targetSpeeds) * 3.6).toFixed(2)),
+      stationary_dropped: droppedCount,
+      device_type: deviceType,
+      start_ts: startTs,
+      laps: lapsSummary,
+      records: finalRecs
+    };
+
+    return workoutResult;
+  }
+
+  // --- XML File Builders: TCX & GPX ---
+  function buildTCX(result, withGps = true) {
+    const startIso = fitTsToIso(result.start_ts);
+    const lines = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<TrainingCenterDatabase',
+      '  xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd"',
+      '  xmlns:ns5="http://www.garmin.com/xmlschemas/ActivityGoals/v1"',
+      '  xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2"',
+      '  xmlns:ns2="http://www.garmin.com/xmlschemas/UserProfile/v2"',
+      '  xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"',
+      '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+      '  <Activities>',
+      '    <Activity Sport="Running">',
+      `      <Id>${startIso}</Id>`
+    ];
+
+    let recPtr = 0;
+    for (let i = 0; i < result.laps.length; i++) {
+      const lap = result.laps[i];
+      const dur = lap.duration_sec;
+      const spd = lap.speed_kmh / 3.6;
+      const dist = lap.distance_m;
+      const cal = lap.calories;
+      const lapStartIso = fitTsToIso(lap.start_time);
+
+      lines.push(`      <Lap StartTime="${lapStartIso}">`);
+      lines.push(`        <TotalTimeSeconds>${dur.toFixed(1)}</TotalTimeSeconds>`);
+      lines.push(`        <DistanceMeters>${dist.toFixed(2)}</DistanceMeters>`);
+      lines.push(`        <MaximumSpeed>${spd.toFixed(3)}</MaximumSpeed>`);
+      lines.push(`        <Calories>${cal}</Calories>`);
+      lines.push(`        <AverageHeartRateBpm><Value>${lap.avg_hr}</Value></AverageHeartRateBpm>`);
+      lines.push(`        <MaximumHeartRateBpm><Value>${lap.max_hr}</Value></MaximumHeartRateBpm>`);
+      lines.push(`        <Intensity>${lap.intensity}</Intensity>`);
+      lines.push(`        <Cadence>${lap.avg_cadence}</Cadence>`);
+      lines.push('        <TriggerMethod>Manual</TriggerMethod>');
+      lines.push('        <Track>');
+
+      const lapRecs = result.records.slice(recPtr, recPtr + dur);
+      for (let j = 0; j < lapRecs.length; j++) {
+        const r = lapRecs[j];
+        const ptIso = fitTsToIso(r.timestamp);
+        lines.push('          <Trackpoint>');
+        lines.push(`            <Time>${ptIso}</Time>`);
+        if (withGps && r.lat && r.lon) {
+          lines.push('            <Position>');
+          lines.push(`              <LatitudeDegrees>${r.lat.toFixed(7)}</LatitudeDegrees>`);
+          lines.push(`              <LongitudeDegrees>${r.lon.toFixed(7)}</LongitudeDegrees>`);
+          lines.push('            </Position>');
+          lines.push('            <AltitudeMeters>15.0</AltitudeMeters>');
+        }
+        lines.push(`            <DistanceMeters>${r.calc_distance.toFixed(2)}</DistanceMeters>`);
+        lines.push(`            <HeartRateBpm><Value>${r.heart_rate}</Value></HeartRateBpm>`);
+        lines.push(`            <Cadence>${r.cadence}</Cadence>`);
+        lines.push('            <Extensions>');
+        lines.push('              <ns3:TPX>');
+        lines.push(`                <ns3:Speed>${r.calc_speed.toFixed(3)}</ns3:Speed>`);
+        lines.push('              </ns3:TPX>');
+        lines.push('            </Extensions>');
+        lines.push('          </Trackpoint>');
+      }
+
+      lines.push('        </Track>');
+      lines.push('      </Lap>');
+      recPtr += dur;
+    }
+
+    lines.push('      <Creator xsi:type="Device_t">');
+    lines.push(`        <Name>${result.device_type}</Name>`);
+    lines.push('        <UnitId>8716547</UnitId>');
+    lines.push('        <ProductID>133</ProductID>');
+    lines.push('      </Creator>');
+    lines.push('    </Activity>');
+    lines.push('  </Activities>');
+    lines.push('</TrainingCenterDatabase>');
+
+    return lines.join('\n');
+  }
+
+  function buildGPX(result) {
+    const startIso = fitTsToIso(result.start_ts);
+    const lines = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      `<gpx version="1.1" creator="${result.device_type}"`,
+      '  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd"',
+      '  xmlns="http://www.topografix.com/GPX/1/1"',
+      '  xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"',
+      '  xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"',
+      '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+      '  <metadata>',
+      '    <name>Interval Workout</name>',
+      `    <time>${startIso}</time>`,
+      '  </metadata>',
+      '  <trk>',
+      '    <name>Interval Workout</name>',
+      '    <type>running</type>',
+      '    <trkseg>'
+    ];
+
+    for (let i = 0; i < result.records.length; i++) {
+      const r = result.records[i];
+      const ptIso = fitTsToIso(r.timestamp);
+      lines.push(`      <trkpt lat="${r.lat.toFixed(7)}" lon="${r.lon.toFixed(7)}">`);
+      lines.push('        <ele>15.0</ele>');
+      lines.push(`        <time>${ptIso}</time>`);
+      lines.push('        <extensions>');
+      lines.push('          <gpxtpx:TrackPointExtension>');
+      lines.push(`            <gpxtpx:speed>${r.calc_speed.toFixed(3)}</gpxtpx:speed>`);
+      lines.push(`            <gpxtpx:hr>${r.heart_rate}</gpxtpx:hr>`);
+      lines.push(`            <gpxtpx:cad>${r.cadence}</gpxtpx:cad>`);
+      lines.push('          </gpxtpx:TrackPointExtension>');
+      lines.push('        </extensions>');
+      lines.push('      </trkpt>');
+    }
+
+    lines.push('    </trkseg>');
+    lines.push('  </trk>');
+    lines.push('</gpx>');
+
+    return lines.join('\n');
+  }
+
+  // --- FitCSVTool Compatible CSV Builder ---
+  function buildFitCSV(result, withGps = false) {
+    const lines = [];
+
+    // 1. file_id
+    lines.push('Type,Local Number,Message,Field 1,Value 1,Units 1,Field 2,Value 2,Units 2,Field 3,Value 3,Units 3,Field 4,Value 4,Units 4,Field 5,Value 5,Units 5,');
+    lines.push('Definition,0,file_id,type,1,,manufacturer,1,,product,1,,serial_number,1,,time_created,1,,');
+    lines.push(`Data,0,file_id,type,"4",,manufacturer,"339",,product,"133",,serial_number,"8716547",,time_created,"${result.start_ts}",,`);
+
+    // 2. device_info
+    lines.push('Definition,1,device_info,timestamp,1,,serial_number,1,,manufacturer,1,,product,1,,product_name,1,,');
+    lines.push(`Data,1,device_info,timestamp,"${result.start_ts}",s,serial_number,"8716547",,manufacturer,"339",,product,"133",,product_name,"${result.device_type}",,`);
+
+    // 3. event (start)
+    lines.push('Definition,2,event,timestamp,1,,event,1,,event_type,1,,');
+    lines.push(`Data,2,event,timestamp,"${result.start_ts}",s,event,"0",,event_type,"0",,`);
+
+    // 4. record definition & data
+    if (withGps) {
+      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,enhanced_speed,1,,position_lat,1,,position_long,1,,');
+    } else {
+      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,enhanced_speed,1,,');
+    }
+
+    for (let i = 0; i < result.records.length; i++) {
+      const r = result.records[i];
+      if (withGps) {
+        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${r.cadence}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,position_lat,"${r.semilat}",semicircles,position_long,"${r.semilon}",semicircles,`);
+      } else {
+        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${r.cadence}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,`);
+      }
+    }
+
+    // 5. lap
+    lines.push('Definition,4,lap,timestamp,1,,start_time,1,,total_elapsed_time,1,,total_timer_time,1,,total_distance,1,,avg_speed,1,,max_speed,1,,total_calories,1,,avg_heart_rate,1,,max_heart_rate,1,,avg_cadence,1,,message_index,1,,intensity,1,,');
+    for (let i = 0; i < result.laps.length; i++) {
+      const l = result.laps[i];
+      const lapEnd = l.start_time + l.duration_sec;
+      lines.push(`Data,4,lap,timestamp,"${lapEnd}",s,start_time,"${l.start_time}",,total_elapsed_time,"${l.duration_sec.toFixed(3)}",s,total_timer_time,"${l.duration_sec.toFixed(3)}",s,total_distance,"${l.distance_m.toFixed(2)}",m,avg_speed,"${(l.speed_kmh / 3.6).toFixed(3)}",m/s,max_speed,"${(l.speed_kmh / 3.6).toFixed(3)}",m/s,total_calories,"${l.calories}",kcal,avg_heart_rate,"${l.avg_hr}",bpm,max_heart_rate,"${l.max_hr}",bpm,avg_cadence,"${l.avg_cadence}",rpm,message_index,"${l.lap_index}",,intensity,"${l.intensity === 'Resting' ? '1' : '0'}",,`);
+    }
+
+    // 6. session
+    const totalSec = result.total_time_sec;
+    const sessionEnd = result.start_ts + totalSec;
+    const avgSpd = result.total_distance_m / totalSec;
+    lines.push('Definition,5,session,timestamp,1,,start_time,1,,total_elapsed_time,1,,total_timer_time,1,,total_distance,1,,avg_speed,1,,max_speed,1,,num_laps,1,,first_lap_index,1,,sport,1,,');
+    lines.push(`Data,5,session,timestamp,"${sessionEnd}",s,start_time,"${result.start_ts}",,total_elapsed_time,"${totalSec.toFixed(3)}",s,total_timer_time,"${totalSec.toFixed(3)}",s,total_distance,"${result.total_distance_m.toFixed(2)}",m,avg_speed,"${avgSpd.toFixed(3)}",m/s,max_speed,"${(result.max_speed_kmh / 3.6).toFixed(3)}",m/s,num_laps,"${result.laps.length}",,first_lap_index,"0",,sport,"1",,`);
+
+    // 7. activity
+    lines.push('Definition,6,activity,timestamp,1,,total_timer_time,1,,num_sessions,1,,type,1,,event,1,,event_type,1,,');
+    lines.push(`Data,6,activity,timestamp,"${sessionEnd}",s,total_timer_time,"${totalSec.toFixed(3)}",s,num_sessions,"1",,type,"0",,event,"0",,event_type,"1",,`);
+
+    return lines.join('\n');
+  }
+
+  // --- Pure Binary FIT File Builder ---
+  function buildBinaryFIT(result, withGps = false) {
+    const bodyBytes = [];
+
+    function pushByte(b) { bodyBytes.push(b & 0xFF); }
+    function pushUint16(val) {
+      bodyBytes.push(val & 0xFF);
+      bodyBytes.push((val >> 8) & 0xFF);
+    }
+    function pushInt32(val) {
+      bodyBytes.push(val & 0xFF);
+      bodyBytes.push((val >> 8) & 0xFF);
+      bodyBytes.push((val >> 16) & 0xFF);
+      bodyBytes.push((val >> 24) & 0xFF);
+    }
+    function pushUint32(val) {
+      bodyBytes.push(val & 0xFF);
+      bodyBytes.push((val >> 8) & 0xFF);
+      bodyBytes.push((val >> 16) & 0xFF);
+      bodyBytes.push((val >> 24) & 0xFF);
+    }
+
+    // 1. Def 0: file_id (global 0)
+    pushByte(0x40); pushByte(0x00); pushByte(0x00); pushUint16(0); pushByte(5);
+    pushByte(0); pushByte(1); pushByte(0);       // type: enum
+    pushByte(1); pushByte(2); pushByte(132);     // manufacturer: uint16
+    pushByte(2); pushByte(2); pushByte(132);     // product: uint16
+    pushByte(3); pushByte(4); pushByte(140);     // serial_number: uint32z
+    pushByte(4); pushByte(4); pushByte(134);     // time_created: uint32
+
+    // Data 0: file_id
+    pushByte(0x00);
+    pushByte(4); pushUint16(339); pushUint16(133); pushUint32(8716547); pushUint32(result.start_ts);
+
+    // 2. Def 1: device_info (global 23)
+    pushByte(0x41); pushByte(0x00); pushByte(0x00); pushUint16(23); pushByte(4);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp: uint32
+    pushByte(1); pushByte(4); pushByte(140);     // serial_number: uint32z
+    pushByte(2); pushByte(2); pushByte(132);     // manufacturer: uint16
+    pushByte(4); pushByte(2); pushByte(132);     // product: uint16
+
+    // Data 1: device_info
+    pushByte(0x01);
+    pushUint32(result.start_ts); pushUint32(8716547); pushUint16(339); pushUint16(133);
+
+    // 3. Def 2: event (global 21)
+    pushByte(0x42); pushByte(0x00); pushByte(0x00); pushUint16(21); pushByte(3);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp
+    pushByte(0); pushByte(1); pushByte(0);       // event
+    pushByte(1); pushByte(1); pushByte(0);       // event_type
+
+    // Data 2: event start
+    pushByte(0x02);
+    pushUint32(result.start_ts); pushByte(0); pushByte(0);
+
+    // 4. Def 3: record (global 20)
+    const numRecFields = withGps ? 7 : 5;
+    pushByte(0x43); pushByte(0x00); pushByte(0x00); pushUint16(20); pushByte(numRecFields);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp: uint32
+    pushByte(5); pushByte(4); pushByte(134);     // distance: uint32 (scale 100)
+    pushByte(6); pushByte(2); pushByte(132);     // speed: uint16 (scale 1000)
+    pushByte(3); pushByte(1); pushByte(2);       // heart_rate: uint8
+    pushByte(4); pushByte(1); pushByte(2);       // cadence: uint8
+    if (withGps) {
+      pushByte(0); pushByte(4); pushByte(133);   // position_lat: sint32
+      pushByte(1); pushByte(4); pushByte(133);   // position_long: sint32
+    }
+
+    // Data 3: records
+    for (let i = 0; i < result.records.length; i++) {
+      const r = result.records[i];
+      pushByte(0x03);
+      pushUint32(r.timestamp);
+      pushUint32(Math.round(r.calc_distance * 100));
+      pushUint16(Math.round(r.calc_speed * 1000));
+      pushByte(r.heart_rate);
+      pushByte(r.cadence);
+      if (withGps) {
+        pushInt32(r.semilat);
+        pushInt32(r.semilon);
+      }
+    }
+
+    // 5. Def 4: lap (global 19)
+    pushByte(0x44); pushByte(0x00); pushByte(0x00); pushUint16(19); pushByte(12);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp
+    pushByte(2); pushByte(4); pushByte(134);     // start_time
+    pushByte(7); pushByte(4); pushByte(134);     // total_elapsed_time (scale 1000)
+    pushByte(8); pushByte(4); pushByte(134);     // total_timer_time (scale 1000)
+    pushByte(9); pushByte(4); pushByte(134);     // total_distance (scale 100)
+    pushByte(13); pushByte(2); pushByte(132);    // avg_speed (scale 1000)
+    pushByte(14); pushByte(2); pushByte(132);    // max_speed (scale 1000)
+    pushByte(11); pushByte(2); pushByte(132);    // total_calories
+    pushByte(15); pushByte(1); pushByte(2);      // avg_heart_rate
+    pushByte(16); pushByte(1); pushByte(2);      // max_heart_rate
+    pushByte(17); pushByte(1); pushByte(2);      // avg_cadence
+    pushByte(254); pushByte(2); pushByte(132);   // message_index
+
+    // Data 4: laps
+    for (let i = 0; i < result.laps.length; i++) {
+      const l = result.laps[i];
+      const lapEnd = l.start_time + l.duration_sec;
+      pushByte(0x04);
+      pushUint32(lapEnd);
+      pushUint32(l.start_time);
+      pushUint32(l.duration_sec * 1000);
+      pushUint32(l.duration_sec * 1000);
+      pushUint32(Math.round(l.distance_m * 100));
+      pushUint16(Math.round((l.speed_kmh / 3.6) * 1000));
+      pushUint16(Math.round((l.speed_kmh / 3.6) * 1000));
+      pushUint16(l.calories);
+      pushByte(l.avg_hr);
+      pushByte(l.max_hr);
+      pushByte(l.avg_cadence);
+      pushUint16(l.lap_index);
+    }
+
+    // 6. Def 5: session (global 18)
+    const totalSec = result.total_time_sec;
+    const sessionEnd = result.start_ts + totalSec;
+    const avgSpd = result.total_distance_m / totalSec;
+
+    pushByte(0x45); pushByte(0x00); pushByte(0x00); pushUint16(18); pushByte(10);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp
+    pushByte(2); pushByte(4); pushByte(134);     // start_time
+    pushByte(7); pushByte(4); pushByte(134);     // total_elapsed_time
+    pushByte(8); pushByte(4); pushByte(134);     // total_timer_time
+    pushByte(9); pushByte(4); pushByte(134);     // total_distance
+    pushByte(14); pushByte(2); pushByte(132);    // avg_speed
+    pushByte(15); pushByte(2); pushByte(132);    // max_speed
+    pushByte(25); pushByte(2); pushByte(132);    // num_laps
+    pushByte(26); pushByte(2); pushByte(132);    // first_lap_index
+    pushByte(5); pushByte(1); pushByte(0);       // sport (1 = running)
+
+    // Data 5: session
+    pushByte(0x05);
+    pushUint32(sessionEnd);
+    pushUint32(result.start_ts);
+    pushUint32(totalSec * 1000);
+    pushUint32(totalSec * 1000);
+    pushUint32(Math.round(result.total_distance_m * 100));
+    pushUint16(Math.round(avgSpd * 1000));
+    pushUint16(Math.round((result.max_speed_kmh / 3.6) * 1000));
+    pushUint16(0); // first_lap_index: 0
+    pushUint16(result.laps.length); // num_laps
+    pushByte(1); // Running
+
+    // 7. Def 6: activity (global 34)
+    pushByte(0x46); pushByte(0x00); pushByte(0x00); pushUint16(34); pushByte(3);
+    pushByte(253); pushByte(4); pushByte(134);   // timestamp
+    pushByte(0); pushByte(4); pushByte(134);     // total_timer_time
+    pushByte(1); pushByte(2); pushByte(132);     // num_sessions
+
+    // Data 6: activity
+    pushByte(0x06);
+    pushUint32(sessionEnd);
+    pushUint32(totalSec * 1000);
+    pushUint16(1);
+
+    // --- Header Construction ---
+    const bodyArray = new Uint8Array(bodyBytes);
+    const dataSize = bodyArray.length;
+
+    const header = new Uint8Array(14);
+    header[0] = 14;      // Header size
+    header[1] = 0x20;    // Protocol 2.0
+    header[2] = 0x8D;    // Profile 21.141
+    header[3] = 0x08;
+    header[4] = dataSize & 0xFF;
+    header[5] = (dataSize >> 8) & 0xFF;
+    header[6] = (dataSize >> 16) & 0xFF;
+    header[7] = (dataSize >> 24) & 0xFF;
+    header[8] = 0x2E;    // '.'
+    header[9] = 0x46;    // 'F'
+    header[10] = 0x49;   // 'I'
+    header[11] = 0x54;   // 'T'
+
+    // Compute Header CRC
+    const headerCrc = computeCrc(header, 0, 12);
+    header[12] = headerCrc & 0xFF;
+    header[13] = (headerCrc >> 8) & 0xFF;
+
+    // Allocate complete file buffer
+    const fullBuffer = new Uint8Array(14 + dataSize + 2);
+    fullBuffer.set(header, 0);
+    fullBuffer.set(bodyArray, 14);
+
+    // Compute File CRC (over header + body)
+    const fileCrc = computeCrc(fullBuffer, 0, 14 + dataSize);
+    fullBuffer[14 + dataSize] = fileCrc & 0xFF;
+    fullBuffer[14 + dataSize + 1] = (fileCrc >> 8) & 0xFF;
+
+    return fullBuffer.buffer;
+  }
+
+  // --- Public Interface ---
+  return {
+    kmhToMs,
+    msToKmh,
+    kmhToPaceStr,
+    paceStrToKmh,
+    formatDuration,
+    getTrackCoords,
+    decodeFitBinary,
+    detectSpeedPhases,
+    analyzeSync,
+    buildWorkoutPlan,
+    processWorkout,
+    buildTCX,
+    buildGPX,
+    buildFitCSV,
+    buildBinaryFIT
+  };
+});
+
+</script>
+  <script>
+/**
+ * FitSync Mobile - Application Logic
+ * Optimized for Safari on iPhone 15 Pro Max & GitHub Pages
+ * Handles file loading, pace syncing, segment editing, live timeline,
+ * workout processing, iOS Share Sheet, and LocalStorage profiles.
+ */
+
+(function () {
+  'use strict';
+
+  // --- Global State ---
+  const state = {
+    aBuffer: null,
+    aFileName: 'A.fit',
+    decodedA: null,
+    qBuffer: null,
+    qFileName: '',
+    decodedQ: null,
+    syncData: null,
+    workoutMode: 'repeats', // 'repeats' or 'custom_segments'
+    customSegments: [
+      { id: 1, name: "Warm Up", durationMin: 14, speedKmh: 10.6, paceStr: "5:40", intensity: "Active", autoCalc: false },
+      { id: 2, name: "Interval 1", durationMin: 10, speedKmh: 13.7, paceStr: "4:23", intensity: "Active", autoCalc: false },
+      { id: 3, name: "Recovery 1", durationMin: 2, speedKmh: 5.7, paceStr: "10:32", intensity: "Resting", autoCalc: false },
+      { id: 4, name: "Interval 2", durationMin: 10, speedKmh: 13.7, paceStr: "4:23", intensity: "Active", autoCalc: false },
+      { id: 5, name: "Recovery 2", durationMin: 2, speedKmh: 5.7, paceStr: "10:32", intensity: "Resting", autoCalc: false },
+      { id: 6, name: "Cool Down", durationMin: 0, speedKmh: 10.6, paceStr: "5:40", intensity: "Active", autoCalc: true }
+    ],
+    generatedOutputs: null
+  };
+
+  // --- Presets ---
+  const PRESETS = [
+    {
+      name: '3×10m @ 13.7 (12km)',
+      wuMin: 14, wuKmh: 10.6,
+      repeats: 3, intMin: 10, intKmh: 13.7, recMin: 2, recKmh: 5.7,
+      cdKmh: 10.6, targetDistKm: 12.0
+    },
+    {
+      name: '5×3m @ 14.2 (8.4km)',
+      wuMin: 13, wuKmh: 10.6,
+      repeats: 5, intMin: 3, intKmh: 14.2, recMin: 1, recKmh: 5.7,
+      cdKmh: 10.6, targetDistKm: 8.44
+    },
+    {
+      name: '3×5m @ 13.7 (8.4km)',
+      wuMin: 14, wuKmh: 10.6,
+      repeats: 3, intMin: 5, intKmh: 13.7, recMin: 1.333, recKmh: 5.7,
+      cdKmh: 10.6, targetDistKm: 8.42
+    },
+    {
+      name: '5×6m @ 14.2 (12.1km)',
+      wuMin: 13, wuKmh: 10.6,
+      repeats: 5, intMin: 6, intKmh: 14.2, recMin: 1.5, recKmh: 5.7,
+      cdKmh: 10.6, targetDistKm: 12.09
+    }
+  ];
+
+  // --- DOM Elements ---
+  // A.fit elements
+  const aDropzone = document.getElementById('a-dropzone');
+  const aFileInput = document.getElementById('a-file-input');
+  const aStatusBox = document.getElementById('a-status-box');
+  const aFileNameText = document.getElementById('a-file-name-text');
+  const aChangeBtn = document.getElementById('a-change-btn');
+  const aRecordsCount = document.getElementById('a-records-count');
+  const aDurationText = document.getElementById('a-duration-text');
+  const aHrRange = document.getElementById('a-hr-range');
+  const aStationaryCount = document.getElementById('a-stationary-count');
+
+  // Q.fit elements
+  const qDropzone = document.getElementById('q-dropzone');
+  const qFileInput = document.getElementById('q-file-input');
+  const qStatusBox = document.getElementById('q-status-box');
+  const qFileNameText = document.getElementById('q-file-name-text');
+  const qChangeBtn = document.getElementById('q-change-btn');
+  const qRecordsCount = document.getElementById('q-records-count');
+  const qDurationText = document.getElementById('q-duration-text');
+  const qMaxSpd = document.getElementById('q-max-spd');
+  const qPhasesCount = document.getElementById('q-phases-count');
+
+  // Sync elements
+  const syncBanner = document.getElementById('sync-banner');
+  const syncDescText = document.getElementById('sync-desc-text');
+  const syncActionRow = document.getElementById('sync-action-row');
+  const syncPhasesPill = document.getElementById('sync-phases-pill');
+  const autofillQBtn = document.getElementById('autofill-q-btn');
+
+  // Mode Buttons
+  const modeRepeatsBtn = document.getElementById('mode-repeats-btn');
+  const modeSegmentsBtn = document.getElementById('mode-segments-btn');
+  const repeatsPane = document.getElementById('repeats-pane');
+  const segmentsPane = document.getElementById('segments-pane');
+
+  // Repeats Inputs
+  const wuDurIn = document.getElementById('wu-dur');
+  const wuKmhIn = document.getElementById('wu-kmh');
+  const wuPaceIn = document.getElementById('wu-pace');
+  const wuDistEst = document.getElementById('wu-dist-est');
+  const repCountIn = document.getElementById('rep-count');
+  const intDurIn = document.getElementById('int-dur');
+  const intKmhIn = document.getElementById('int-kmh');
+  const intPaceIn = document.getElementById('int-pace');
+  const recDurIn = document.getElementById('rec-dur');
+  const recKmhIn = document.getElementById('rec-kmh');
+  const recPaceIn = document.getElementById('rec-pace');
+  const cdKmhIn = document.getElementById('cd-kmh');
+  const cdPaceIn = document.getElementById('cd-pace');
+  const targetDistIn = document.getElementById('target-dist');
+  const cdModeSelect = document.getElementById('cd-mode-select');
+  const cdManualGroup = document.getElementById('cd-manual-group');
+  const cdManualDurIn = document.getElementById('cd-manual-dur');
+
+  // Segments Inputs
+  const segTargetDistIn = document.getElementById('seg-target-dist');
+  const addSegmentBtn = document.getElementById('add-segment-btn');
+  const addPairBtn = document.getElementById('add-pair-btn');
+  const progressionBtn = document.getElementById('progression-btn');
+  const recalcFinalBtn = document.getElementById('recalc-final-btn');
+  const segmentsList = document.getElementById('segments-list');
+  const bannerTarget = document.getElementById('banner-target');
+  const bannerPrior = document.getElementById('banner-prior');
+  const bannerRemaining = document.getElementById('banner-remaining');
+
+  // Timeline & Stats
+  const timelineBar = document.getElementById('timeline-bar');
+  const prevDuration = document.getElementById('prev-duration');
+  const prevDistance = document.getElementById('prev-distance');
+  const prevPace = document.getElementById('prev-pace');
+  const prevSpeed = document.getElementById('prev-speed');
+
+  // Device & Settings
+  const deviceSelect = document.getElementById('device-select');
+  const trimStationaryIn = document.getElementById('trim-stationary');
+  const devicePillText = document.getElementById('device-pill-text');
+
+  // Process & Results
+  const processBtn = document.getElementById('process-btn');
+  const processLoader = document.getElementById('process-loader');
+  const resultsCard = document.getElementById('results-card');
+  const resTime = document.getElementById('res-time');
+  const resDist = document.getElementById('res-dist');
+  const resPace = document.getElementById('res-pace');
+  const resMaxSpd = document.getElementById('res-max-spd');
+  const iosShareBtn = document.getElementById('ios-share-btn');
+  const dlZipBtn = document.getElementById('dl-zip-btn');
+  const dlTcxBtn = document.getElementById('dl-tcx-btn');
+  const dlFitGpsBtn = document.getElementById('dl-fit-gps-btn');
+  const dlFitIndoorBtn = document.getElementById('dl-fit-indoor-btn');
+  const dlTcxIndoorBtn = document.getElementById('dl-tcx-indoor-btn');
+  const dlGpxBtn = document.getElementById('dl-gpx-btn');
+  const dlCsvBtn = document.getElementById('dl-csv-btn');
+  const toggleLapsBtn = document.getElementById('toggle-laps-btn');
+  const lapsContainer = document.getElementById('laps-container');
+  const lapsTbody = document.getElementById('laps-tbody');
+
+  // Modals
+  const progressionModal = document.getElementById('progression-modal');
+  const closeProgModalBtn = document.getElementById('close-prog-modal-btn');
+  const cancelProgBtn = document.getElementById('cancel-prog-btn');
+  const applyProgBtn = document.getElementById('apply-prog-btn');
+  const progIncludeRec = document.getElementById('prog-include-rec');
+  const progRecDurGroup = document.getElementById('prog-rec-dur-group');
+
+  const saveProfileModal = document.getElementById('save-profile-modal');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  const closeSaveModalBtn = document.getElementById('close-save-modal-btn');
+  const cancelSaveModalBtn = document.getElementById('cancel-save-modal-btn');
+  const confirmSaveProfileBtn = document.getElementById('confirm-save-profile-btn');
+  const saveProfileTitle = document.getElementById('save-profile-title');
+  const savedProfilesSelect = document.getElementById('saved-profiles-select');
+  const loadProfileBtn = document.getElementById('load-profile-btn');
+  const deleteProfileBtn = document.getElementById('delete-profile-btn');
+  const exportProfilesBtn = document.getElementById('export-profiles-btn');
+
+  // --- Initializer ---
+  function init() {
+    setupFileHandlers();
+    setupDualPaceBindings();
+    setupPresets();
+    setupModeSwitch();
+    setupSegmentsManager();
+    setupDeviceSelect();
+    setupProgressionModal();
+    setupProfilesManager();
+    setupActionButtons();
+
+    autoCalculateFinalSegment();
+    renderSegmentsList();
+    updateWorkoutPreview();
+  }
+
+  // --- Dual File Upload & Sync Analysis ---
+  function setupFileHandlers() {
+    // A.fit handlers
+    if (aDropzone && aFileInput) {
+      aDropzone.addEventListener('click', () => aFileInput.click());
+      aChangeBtn?.addEventListener('click', () => aFileInput.click());
+
+      aFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleAFile(file);
+      });
+
+      setupDropEvents(aDropzone, (file) => handleAFile(file));
+    }
+
+    // Q.fit handlers
+    if (qDropzone && qFileInput) {
+      qDropzone.addEventListener('click', () => qFileInput.click());
+      qChangeBtn?.addEventListener('click', () => qFileInput.click());
+
+      qFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleQFile(file);
+      });
+
+      setupDropEvents(qDropzone, (file) => handleQFile(file));
+    }
+
+    // Autofill button
+    autofillQBtn?.addEventListener('click', () => {
+      if (state.syncData && state.syncData.detected_q_phases) {
+        applyQPhases(state.syncData.detected_q_phases);
+      }
+    });
+  }
+
+  function setupDropEvents(el, onFile) {
+    ['dragenter', 'dragover'].forEach(name => {
+      el.addEventListener(name, (e) => {
+        e.preventDefault();
+        el.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+      el.addEventListener(name, (e) => {
+        e.preventDefault();
+        el.classList.remove('dragover');
+      });
+    });
+
+    el.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file) onFile(file);
+    });
+  }
+
+  function handleAFile(file) {
+    state.aFileName = file.name;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        state.aBuffer = e.target.result;
+        state.decodedA = FitEngine.decodeFitBinary(state.aBuffer);
+
+        const recs = state.decodedA.records;
+        const count = recs.length;
+        const durSec = count;
+        const hrs = recs.map(r => r.heart_rate).filter(h => h && h > 30);
+        const minHr = hrs.length ? Math.min(...hrs) : '--';
+        const maxHr = hrs.length ? Math.max(...hrs) : '--';
+
+        // Count leading stationary
+        let statCount = 0;
+        for (let i = 0; i < recs.length; i++) {
+          const s = recs[i].speed || 0;
+          const cad = recs[i].cadence || 0;
+          if (s < 0.3 && cad < 40) statCount++;
+          else break;
+        }
+
+        aFileNameText.innerText = file.name;
+        aRecordsCount.innerText = count.toLocaleString();
+        aDurationText.innerText = FitEngine.formatDuration(durSec);
+        aHrRange.innerText = hrs.length ? `${minHr}-${maxHr}` : 'None';
+        aStationaryCount.innerText = `${statCount}s`;
+
+        aDropzone.classList.add('hidden');
+        aStatusBox.classList.remove('hidden');
+
+        runSyncAnalysis();
+      } catch (err) {
+        alert(`Failed to decode A.fit: ${err.message}`);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handleQFile(file) {
+    state.qFileName = file.name;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        state.qBuffer = e.target.result;
+        state.decodedQ = FitEngine.decodeFitBinary(state.qBuffer);
+
+        const recs = state.decodedQ.records;
+        const count = recs.length;
+        const durSec = count;
+        const spds = recs.map(r => r.speed || 0);
+        const maxSpd = spds.length ? (Math.max(...spds) * 3.6).toFixed(1) : '--';
+
+        // Detect treadmill phases
+        const qPhases = FitEngine.detectSpeedPhases(recs, 20);
+
+        qFileNameText.innerText = file.name;
+        qRecordsCount.innerText = count.toLocaleString();
+        qDurationText.innerText = FitEngine.formatDuration(durSec);
+        qMaxSpd.innerText = `${maxSpd}k`;
+        qPhasesCount.innerText = `${qPhases.length}`;
+
+        qDropzone.classList.add('hidden');
+        qStatusBox.classList.remove('hidden');
+
+        runSyncAnalysis();
+      } catch (err) {
+        alert(`Failed to decode Q.fit: ${err.message}`);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function runSyncAnalysis() {
+    if (!state.decodedQ) return;
+
+    if (state.decodedA) {
+      state.syncData = FitEngine.analyzeSync(state.decodedA.records, state.decodedQ.records);
+      const clockDiff = state.syncData.clock_offset_sec || 0;
+      const moveDiff = state.syncData.movement_offset_sec || 0;
+      const statCount = state.syncData.a_leading_stationary_count || 0;
+      const phases = state.syncData.detected_q_phases || [];
+
+      let desc = `• <strong>Clock Offset:</strong> Q started ${clockDiff >= 0 ? clockDiff + 's after' : Math.abs(clockDiff) + 's before'} A.<br>`;
+      desc += `• <strong>Motion Alignment:</strong> Starts aligned within ${Math.abs(moveDiff)}s.<br>`;
+      desc += `• <strong>Stationary Start in Watch:</strong> ${statCount} initial standstill records detected.`;
+
+      syncDescText.innerHTML = desc;
+
+      if (phases.length > 0) {
+        syncPhasesPill.innerText = `${phases.length} treadmill phases detected`;
+        syncActionRow.classList.remove('hidden');
+      } else {
+        syncActionRow.classList.add('hidden');
+      }
+
+      syncBanner.classList.remove('hidden');
+    } else {
+      // Only Q is loaded
+      const phases = FitEngine.detectSpeedPhases(state.decodedQ.records, 20);
+      state.syncData = { detected_q_phases: phases };
+
+      syncDescText.innerHTML = `Loaded treadmill sensor data (${state.decodedQ.records.length} records). Ready to auto-fill intervals!`;
+      if (phases.length > 0) {
+        syncPhasesPill.innerText = `${phases.length} phases detected`;
+        syncActionRow.classList.remove('hidden');
+      }
+      syncBanner.classList.remove('hidden');
+    }
+  }
+
+  function applyQPhases(phases) {
+    if (!phases || phases.length < 2) {
+      alert('Not enough distinct speed phases detected in Q.fit.');
+      return;
+    }
+
+    if (state.workoutMode === 'custom_segments') {
+      // Build custom segments directly from Q phases!
+      state.customSegments = phases.map((p, idx) => {
+        let name = `Segment ${idx + 1}`;
+        let intensity = "Active";
+        if (idx === 0) name = "Warm Up";
+        else if (idx === phases.length - 1) name = "Cool Down";
+        else if (p.speed_kmh < 8.0) {
+          name = `Recovery ${Math.floor(idx / 2)}`;
+          intensity = "Resting";
+        } else {
+          name = `Interval ${Math.ceil(idx / 2)}`;
+        }
+
+        return {
+          id: idx + 1,
+          name: name,
+          durationMin: p.duration_min,
+          speedKmh: p.speed_kmh,
+          paceStr: p.pace_str || FitEngine.kmhToPaceStr(p.speed_kmh),
+          intensity: intensity,
+          autoCalc: (idx === phases.length - 1)
+        };
+      });
+
+      // Update total target distance estimate
+      let totalDistKm = 0;
+      phases.forEach(p => {
+        totalDistKm += (p.duration_sec * p.speed_ms) / 1000.0;
+      });
+      segTargetDistIn.value = (Math.round(totalDistKm * 10) / 10).toFixed(1);
+
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+    } else {
+      // Structured repeats mode
+      const wu = phases[0];
+      wuDurIn.value = wu.duration_min;
+      wuKmhIn.value = wu.speed_kmh;
+      wuPaceIn.value = FitEngine.kmhToPaceStr(wu.speed_kmh);
+
+      if (phases.length >= 3) {
+        const intP = phases[1];
+        const recP = phases[2];
+        intDurIn.value = intP.duration_min;
+        intKmhIn.value = intP.speed_kmh;
+        intPaceIn.value = FitEngine.kmhToPaceStr(intP.speed_kmh);
+
+        recDurIn.value = recP.duration_min;
+        recKmhIn.value = recP.speed_kmh;
+        recPaceIn.value = FitEngine.kmhToPaceStr(recP.speed_kmh);
+
+        const repCount = Math.floor((phases.length - 2) / 2);
+        repCountIn.value = Math.max(1, repCount);
+      }
+
+      const cd = phases[phases.length - 1];
+      cdKmhIn.value = cd.speed_kmh;
+      cdPaceIn.value = FitEngine.kmhToPaceStr(cd.speed_kmh);
+
+      let totalDistKm = 0;
+      phases.forEach(p => {
+        totalDistKm += (p.duration_sec * p.speed_ms) / 1000.0;
+      });
+      targetDistIn.value = (Math.round(totalDistKm * 10) / 10).toFixed(1);
+    }
+
+    updateWorkoutPreview();
+    alert(`⚡ Successfully populated ${phases.length} intervals and speeds directly from Q.fit!`);
+  }
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  // --- 2-Way Pace Sync Helpers ---
+  function bindPacePair(kmhIn, paceIn) {
+    kmhIn.addEventListener('input', () => {
+      const kmh = parseFloat(kmhIn.value) || 0;
+      paceIn.value = kmh > 0 ? FitEngine.kmhToPaceStr(kmh) : '';
+      updateWorkoutPreview();
+    });
+
+    paceIn.addEventListener('input', () => {
+      const p = paceIn.value.trim();
+      if (p.length >= 3) {
+        const kmh = FitEngine.paceStrToKmh(p);
+        if (kmh > 0) {
+          kmhIn.value = kmh;
+          updateWorkoutPreview();
+        }
+      }
+    });
+  }
+
+  function setupDualPaceBindings() {
+    bindPacePair(wuKmhIn, wuPaceIn);
+    bindPacePair(intKmhIn, intPaceIn);
+    bindPacePair(recKmhIn, recPaceIn);
+    bindPacePair(cdKmhIn, cdPaceIn);
+
+    wuDurIn.addEventListener('input', updateWorkoutPreview);
+    repCountIn.addEventListener('input', updateWorkoutPreview);
+    intDurIn.addEventListener('input', updateWorkoutPreview);
+    recDurIn.addEventListener('input', updateWorkoutPreview);
+    targetDistIn.addEventListener('input', updateWorkoutPreview);
+    cdModeSelect.addEventListener('change', () => {
+      const isManual = cdModeSelect.value === 'manual';
+      cdManualGroup.classList.toggle('hidden', !isManual);
+      updateWorkoutPreview();
+    });
+    cdManualDurIn.addEventListener('input', updateWorkoutPreview);
+  }
+
+  // --- Presets ---
+  function setupPresets() {
+    const chips = document.querySelectorAll('.preset-chip');
+    chips.forEach((chip, idx) => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        applyPreset(idx);
+      });
+    });
+  }
+
+  function applyPreset(index) {
+    const p = PRESETS[index];
+    if (!p) return;
+
+    wuDurIn.value = p.wuMin;
+    wuKmhIn.value = p.wuKmh;
+    wuPaceIn.value = FitEngine.kmhToPaceStr(p.wuKmh);
+
+    repCountIn.value = p.repeats;
+    intDurIn.value = p.intMin;
+    intKmhIn.value = p.intKmh;
+    intPaceIn.value = FitEngine.kmhToPaceStr(p.intKmh);
+
+    recDurIn.value = p.recMin;
+    recKmhIn.value = p.recKmh;
+    recPaceIn.value = FitEngine.kmhToPaceStr(p.recKmh);
+
+    cdKmhIn.value = p.cdKmh;
+    cdPaceIn.value = FitEngine.kmhToPaceStr(p.cdKmh);
+
+    targetDistIn.value = p.targetDistKm;
+    cdModeSelect.value = 'auto_distance';
+    cdManualGroup.classList.add('hidden');
+
+    updateWorkoutPreview();
+  }
+
+  // --- Mode Switching ---
+  function setupModeSwitch() {
+    modeRepeatsBtn.addEventListener('click', () => switchMode('repeats'));
+    modeSegmentsBtn.addEventListener('click', () => switchMode('custom_segments'));
+  }
+
+  function switchMode(mode) {
+    state.workoutMode = mode;
+    if (mode === 'repeats') {
+      modeRepeatsBtn.classList.add('active');
+      modeSegmentsBtn.classList.remove('active');
+      repeatsPane.classList.remove('hidden');
+      segmentsPane.classList.add('hidden');
+    } else {
+      modeSegmentsBtn.classList.add('active');
+      modeRepeatsBtn.classList.remove('active');
+      segmentsPane.classList.remove('hidden');
+      repeatsPane.classList.add('hidden');
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+    }
+    updateWorkoutPreview();
+  }
+
+  // --- Manual Segments Manager ---
+  function setupSegmentsManager() {
+    segTargetDistIn.addEventListener('input', () => {
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+      updateWorkoutPreview();
+    });
+
+    addSegmentBtn.addEventListener('click', addCustomSegment);
+    addPairBtn.addEventListener('click', addIntervalPair);
+    recalcFinalBtn.addEventListener('click', () => {
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+      updateWorkoutPreview();
+    });
+  }
+
+  function autoCalculateFinalSegment() {
+    if (!state.customSegments || state.customSegments.length === 0) return;
+    const targetDistKm = parseFloat(segTargetDistIn.value) || 0;
+    const targetDistM = targetDistKm * 1000.0;
+
+    const num = state.customSegments.length;
+    let priorDistM = 0;
+    for (let i = 0; i < num - 1; i++) {
+      const s = state.customSegments[i];
+      const durSec = Math.round((s.durationMin || 0) * 60);
+      const spdMs = FitEngine.kmhToMs(s.speedKmh || 0);
+      priorDistM += durSec * spdMs;
+    }
+
+    const lastIdx = num - 1;
+    const lastSeg = state.customSegments[lastIdx];
+
+    bannerTarget.innerText = `${targetDistKm.toFixed(2)} km`;
+    bannerPrior.innerText = `${(priorDistM / 1000.0).toFixed(2)} km`;
+
+    if (lastSeg && lastSeg.autoCalc) {
+      const remDistM = Math.max(0, targetDistM - priorDistM);
+      bannerRemaining.innerText = `${(remDistM / 1000.0).toFixed(2)} km`;
+
+      const spdMs = FitEngine.kmhToMs(lastSeg.speedKmh || 0);
+      if (spdMs > 0 && targetDistM > priorDistM) {
+        const durSec = Math.round(remDistM / spdMs);
+        lastSeg.durationMin = parseFloat((durSec / 60.0).toFixed(2));
+      }
+    } else {
+      if (lastSeg) {
+        const lastDist = Math.round((lastSeg.durationMin || 0) * 60) * FitEngine.kmhToMs(lastSeg.speedKmh || 0);
+        bannerRemaining.innerText = `${(lastDist / 1000.0).toFixed(2)} km`;
+      }
+    }
+  }
+
+  function renderSegmentsList() {
+    segmentsList.innerHTML = '';
+    const num = state.customSegments.length;
+
+    state.customSegments.forEach((seg, idx) => {
+      const isFinal = (idx === num - 1);
+      const durSec = Math.round((seg.durationMin || 0) * 60);
+      const spdMs = FitEngine.kmhToMs(seg.speedKmh || 0);
+      const distKm = ((durSec * spdMs) / 1000.0).toFixed(2);
+
+      const card = document.createElement('div');
+      card.className = `segment-item-card ${seg.autoCalc ? 'auto-calc-active' : ''}`;
+      card.dataset.id = seg.id;
+
+      card.innerHTML = `
+        <div class="seg-header-row">
+          <span class="seg-num-pill">#${idx + 1}</span>
+          <input type="text" class="seg-name-in" value="${seg.name || ''}" placeholder="Phase name" style="flex: 1; margin: 0 8px; height: 32px; font-size: 13px;">
+          <button type="button" class="btn-xs btn-danger seg-del-btn" title="Delete" ${num <= 1 ? 'disabled style="opacity: 0.3;"' : ''}>🗑️</button>
+        </div>
+        <div class="seg-inputs-grid">
+          <div class="input-group">
+            <label>km/h</label>
+            <input type="number" class="seg-kmh-in" value="${seg.speedKmh || 0}" step="0.1" inputmode="decimal">
+          </div>
+          <div class="input-group">
+            <label>min/km</label>
+            <input type="text" class="seg-pace-in" value="${seg.paceStr || FitEngine.kmhToPaceStr(seg.speedKmh)}" placeholder="4:30">
+          </div>
+          <div class="input-group">
+            <label>Time (min)</label>
+            <input type="number" class="seg-dur-in" value="${seg.durationMin || 0}" step="0.1" inputmode="decimal" ${seg.autoCalc ? 'disabled title="Auto calculated"' : ''}>
+          </div>
+        </div>
+        <div class="seg-bottom-row">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select class="seg-int-in" style="height: 28px; font-size: 11px; padding: 0 4px; width: 80px;">
+              <option value="Active" ${seg.intensity === 'Active' ? 'selected' : ''}>Active</option>
+              <option value="Resting" ${seg.intensity === 'Resting' ? 'selected' : ''}>Resting</option>
+            </select>
+            <span class="seg-dist-text">${distKm} km</span>
+          </div>
+          ${isFinal ? `
+          <label style="display: flex; align-items: center; gap: 4px; color: var(--accent-purple); cursor: pointer;">
+            <input type="checkbox" class="seg-autocalc-toggle" ${seg.autoCalc ? 'checked' : ''} style="width: 16px; height: 16px;">
+            <span>Auto-Calc</span>
+          </label>
+          ` : ''}
+        </div>
+      `;
+
+      // Event bindings
+      const nameIn = card.querySelector('.seg-name-in');
+      const kmhIn = card.querySelector('.seg-kmh-in');
+      const paceIn = card.querySelector('.seg-pace-in');
+      const durIn = card.querySelector('.seg-dur-in');
+      const intIn = card.querySelector('.seg-int-in');
+      const delBtn = card.querySelector('.seg-del-btn');
+      const autoToggle = card.querySelector('.seg-autocalc-toggle');
+
+      nameIn.addEventListener('input', (e) => {
+        seg.name = e.target.value;
+        updateWorkoutPreview();
+      });
+
+      kmhIn.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        seg.speedKmh = val;
+        seg.paceStr = FitEngine.kmhToPaceStr(val);
+        paceIn.value = seg.paceStr;
+        autoCalculateFinalSegment();
+        updateWorkoutPreview();
+      });
+
+      paceIn.addEventListener('input', (e) => {
+        const str = e.target.value.trim();
+        if (str.length >= 3) {
+          const kmh = FitEngine.paceStrToKmh(str);
+          if (kmh > 0) {
+            seg.speedKmh = kmh;
+            seg.paceStr = str;
+            kmhIn.value = kmh;
+            autoCalculateFinalSegment();
+            updateWorkoutPreview();
+          }
+        }
+      });
+
+      durIn.addEventListener('input', (e) => {
+        seg.durationMin = parseFloat(e.target.value) || 0;
+        autoCalculateFinalSegment();
+        updateWorkoutPreview();
+      });
+
+      intIn.addEventListener('change', (e) => {
+        seg.intensity = e.target.value;
+      });
+
+      delBtn.addEventListener('click', () => {
+        if (state.customSegments.length <= 1) return;
+        state.customSegments.splice(idx, 1);
+        autoCalculateFinalSegment();
+        renderSegmentsList();
+        updateWorkoutPreview();
+      });
+
+      if (autoToggle) {
+        autoToggle.addEventListener('change', (e) => {
+          seg.autoCalc = e.target.checked;
+          autoCalculateFinalSegment();
+          renderSegmentsList();
+          updateWorkoutPreview();
+        });
+      }
+
+      segmentsList.appendChild(card);
+    });
+  }
+
+  function addCustomSegment() {
+    const nextId = (state.customSegments.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
+    // Unset auto-calc on existing
+    state.customSegments.forEach(s => s.autoCalc = false);
+    state.customSegments.push({
+      id: nextId,
+      name: `Interval ${nextId}`,
+      durationMin: 5,
+      speedKmh: 13.0,
+      paceStr: FitEngine.kmhToPaceStr(13.0),
+      intensity: "Active",
+      autoCalc: false
+    });
+    autoCalculateFinalSegment();
+    renderSegmentsList();
+    updateWorkoutPreview();
+  }
+
+  function addIntervalPair() {
+    const nextId = (state.customSegments.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
+    state.customSegments.forEach(s => s.autoCalc = false);
+    state.customSegments.push({
+      id: nextId,
+      name: `Interval`,
+      durationMin: 5,
+      speedKmh: 13.7,
+      paceStr: FitEngine.kmhToPaceStr(13.7),
+      intensity: "Active",
+      autoCalc: false
+    });
+    state.customSegments.push({
+      id: nextId + 1,
+      name: `Recovery`,
+      durationMin: 1.5,
+      speedKmh: 5.7,
+      paceStr: FitEngine.kmhToPaceStr(5.7),
+      intensity: "Resting",
+      autoCalc: false
+    });
+    autoCalculateFinalSegment();
+    renderSegmentsList();
+    updateWorkoutPreview();
+  }
+
+  // --- Progression Helper Modal ---
+  function setupProgressionModal() {
+    progressionBtn.addEventListener('click', () => progressionModal.classList.remove('hidden'));
+    closeProgModalBtn.addEventListener('click', () => progressionModal.classList.add('hidden'));
+    cancelProgBtn.addEventListener('click', () => progressionModal.classList.add('hidden'));
+
+    progIncludeRec.addEventListener('change', () => {
+      progRecDurGroup.style.display = progIncludeRec.value === 'yes' ? 'flex' : 'none';
+    });
+
+    applyProgBtn.addEventListener('click', () => {
+      const startSpd = parseFloat(document.getElementById('prog-start-spd').value) || 11.0;
+      const endSpd = parseFloat(document.getElementById('prog-end-spd').value) || 14.0;
+      const stepSpd = parseFloat(document.getElementById('prog-step-spd').value) || 0.5;
+      const stepDur = parseFloat(document.getElementById('prog-step-dur').value) || 3.0;
+      const incRec = progIncludeRec.value === 'yes';
+      const recDur = parseFloat(document.getElementById('prog-rec-dur').value) || 1.0;
+
+      if (startSpd >= endSpd || stepSpd <= 0) {
+        alert('Start speed must be less than End speed, and step increment > 0');
+        return;
+      }
+
+      state.customSegments = [];
+      let cur = startSpd;
+      let stepIdx = 1;
+
+      while (cur <= endSpd + 0.01) {
+        state.customSegments.push({
+          id: stepIdx,
+          name: `Progression ${stepIdx} (${cur.toFixed(1)}k)`,
+          durationMin: stepDur,
+          speedKmh: parseFloat(cur.toFixed(1)),
+          paceStr: FitEngine.kmhToPaceStr(cur),
+          intensity: 'Active',
+          autoCalc: false
+        });
+        stepIdx++;
+
+        if (incRec && cur < endSpd - 0.01) {
+          state.customSegments.push({
+            id: stepIdx,
+            name: `Recovery`,
+            durationMin: recDur,
+            speedKmh: 5.7,
+            paceStr: FitEngine.kmhToPaceStr(5.7),
+            intensity: 'Resting',
+            autoCalc: false
+          });
+          stepIdx++;
+        }
+        cur += stepSpd;
+      }
+
+      // Add cool down with auto-calc
+      state.customSegments.push({
+        id: stepIdx,
+        name: 'Cool Down',
+        durationMin: 0,
+        speedKmh: 10.6,
+        paceStr: FitEngine.kmhToPaceStr(10.6),
+        intensity: 'Active',
+        autoCalc: true
+      });
+
+      progressionModal.classList.add('hidden');
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+      updateWorkoutPreview();
+    });
+  }
+
+  // --- Live Timeline & Preview ---
+  function updateWorkoutPreview() {
+    let plan;
+    if (state.workoutMode === 'custom_segments') {
+      autoCalculateFinalSegment();
+      plan = FitEngine.buildWorkoutPlan({
+        mode: 'custom_segments',
+        segments: state.customSegments,
+        targetDistKm: parseFloat(segTargetDistIn.value) || 0,
+        autoCalcFinal: true
+      });
+    } else {
+      plan = FitEngine.buildWorkoutPlan({
+        mode: 'repeats',
+        warmupMin: wuDurIn.value,
+        warmupKmh: wuKmhIn.value,
+        repeats: repCountIn.value,
+        intMin: intDurIn.value,
+        intKmh: intKmhIn.value,
+        recMin: recDurIn.value,
+        recKmh: recKmhIn.value,
+        cdKmh: cdKmhIn.value,
+        cdMode: cdModeSelect.value,
+        targetDistKm: targetDistIn.value,
+        cdManualMin: cdManualDurIn.value
+      });
+
+      // Update warm up dist badge
+      const wuDurSec = Math.round((parseFloat(wuDurIn.value) || 0) * 60);
+      const wuSpdMs = FitEngine.kmhToMs(wuKmhIn.value || 0);
+      wuDistEst.innerText = `${((wuDurSec * wuSpdMs) / 1000.0).toFixed(2)} km`;
+    }
+
+    const totalSec = plan.targetSpeeds.length;
+    let totalDistM = 0;
+    plan.targetSpeeds.forEach(s => totalDistM += s);
+
+    const avgSpdMs = totalSec > 0 ? totalDistM / totalSec : 0;
+    const avgSpdKmh = avgSpdMs * 3.6;
+
+    prevDuration.innerText = FitEngine.formatDuration(totalSec);
+    prevDistance.innerText = `${(totalDistM / 1000.0).toFixed(2)} km`;
+    prevPace.innerText = FitEngine.kmhToPaceStr(avgSpdKmh);
+    prevSpeed.innerText = `${avgSpdKmh.toFixed(1)} km/h`;
+
+    // Render timeline bar
+    timelineBar.innerHTML = '';
+    plan.laps.forEach(lap => {
+      const pct = totalSec > 0 ? (lap.duration / totalSec) * 100 : 0;
+      const segEl = document.createElement('div');
+      let typeClass = 'interval';
+      if (lap.phase.toLowerCase().includes('warm')) typeClass = 'warmup';
+      else if (lap.phase.toLowerCase().includes('rec')) typeClass = 'recovery';
+      else if (lap.phase.toLowerCase().includes('cool')) typeClass = 'cooldown';
+
+      segEl.className = `timeline-seg ${typeClass}`;
+      segEl.style.width = `${pct}%`;
+      segEl.title = `${lap.phase}: ${FitEngine.formatDuration(lap.duration)} @ ${lap.speed_kmh} km/h`;
+      timelineBar.appendChild(segEl);
+    });
+  }
+
+  // --- Device Selection ---
+  function setupDeviceSelect() {
+    deviceSelect.addEventListener('change', () => {
+      devicePillText.innerText = deviceSelect.value;
+    });
+  }
+
+  // --- Processing Action ---
+  function setupActionButtons() {
+    processBtn.addEventListener('click', runProcessor);
+    iosShareBtn.addEventListener('click', shareWorkoutToIos);
+    dlZipBtn.addEventListener('click', downloadAllZip);
+    dlTcxBtn.addEventListener('click', () => downloadFile('tcxGps', 'New.tcx', 'application/vnd.garmin.tcx+xml'));
+    dlFitGpsBtn.addEventListener('click', () => downloadFile('fitGps', 'New_gps.fit', 'application/octet-stream'));
+    dlFitIndoorBtn.addEventListener('click', () => downloadFile('fitIndoor', 'New.fit', 'application/octet-stream'));
+    dlTcxIndoorBtn.addEventListener('click', () => downloadFile('tcxIndoor', 'New_indoor.tcx', 'application/vnd.garmin.tcx+xml'));
+    dlGpxBtn.addEventListener('click', () => downloadFile('gpx', 'New.gpx', 'application/gpx+xml'));
+    dlCsvBtn.addEventListener('click', () => downloadFile('csv', 'New.csv', 'text/csv'));
+
+    toggleLapsBtn.addEventListener('click', () => {
+      const isHidden = lapsContainer.classList.contains('hidden');
+      lapsContainer.classList.toggle('hidden', !isHidden);
+      toggleLapsBtn.innerText = isHidden ? 'Hide Laps' : 'Show Laps';
+    });
+  }
+
+  function runProcessor() {
+    if (!state.aBuffer) {
+      alert('Please upload or select an A.fit file first in Step 1.');
+      return;
+    }
+
+    processBtn.disabled = true;
+    processLoader.classList.remove('hidden');
+
+    setTimeout(() => {
+      try {
+        const config = {
+          mode: state.workoutMode,
+          trimStationary: trimStationaryIn.checked,
+          stationaryThreshold: 0.3,
+          deviceType: deviceSelect.value,
+          centerLat: 3.139000,
+          centerLon: 101.686900
+        };
+
+        if (state.workoutMode === 'custom_segments') {
+          autoCalculateFinalSegment();
+          config.segments = state.customSegments;
+          config.targetDistKm = parseFloat(segTargetDistIn.value) || 0;
+          config.autoCalcFinal = true;
+        } else {
+          config.warmupMin = wuDurIn.value;
+          config.warmupKmh = wuKmhIn.value;
+          config.repeats = repCountIn.value;
+          config.intMin = intDurIn.value;
+          config.intKmh = intKmhIn.value;
+          config.recMin = recDurIn.value;
+          config.recKmh = recKmhIn.value;
+          config.cdKmh = cdKmhIn.value;
+          config.cdMode = cdModeSelect.value;
+          config.targetDistKm = targetDistIn.value;
+          config.cdManualMin = cdManualDurIn.value;
+        }
+
+        const res = FitEngine.processWorkout(state.aBuffer, config);
+
+        // Build outputs
+        const tcxGps = FitEngine.buildTCX(res, true);
+        const tcxIndoor = FitEngine.buildTCX(res, false);
+        const gpx = FitEngine.buildGPX(res);
+        const csv = FitEngine.buildFitCSV(res, true);
+        const fitIndoor = FitEngine.buildBinaryFIT(res, false);
+        const fitGps = FitEngine.buildBinaryFIT(res, true);
+
+        state.generatedOutputs = {
+          res,
+          tcxGps,
+          tcxIndoor,
+          gpx,
+          csv,
+          fitIndoor,
+          fitGps
+        };
+
+        // Populate Results
+        resTime.innerText = res.total_time_str;
+        resDist.innerText = `${res.total_distance_km.toFixed(2)} km`;
+        resPace.innerText = res.avg_pace_str;
+        resMaxSpd.innerText = `${res.max_speed_kmh.toFixed(1)} km/h`;
+
+        // Render Laps Table
+        lapsTbody.innerHTML = '';
+        res.laps.forEach(l => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${l.lap_index + 1}</td>
+            <td style="text-align: left; font-weight: 500;">${l.phase}</td>
+            <td>${l.duration_str}</td>
+            <td>${l.pace_str}</td>
+            <td>${(l.distance_m / 1000).toFixed(2)}k</td>
+            <td>${l.avg_hr}</td>
+            <td>${l.avg_cadence}</td>
+          `;
+          lapsTbody.appendChild(row);
+        });
+
+        resultsCard.classList.remove('hidden');
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert(`Processing error: ${err.message}`);
+      } finally {
+        processBtn.disabled = false;
+        processLoader.classList.add('hidden');
+      }
+    }, 50);
+  }
+
+  // --- iOS Share Sheet (Web Share API) ---
+  async function shareWorkoutToIos() {
+    if (!state.generatedOutputs) return;
+    const { tcxGps, fitGps, res } = state.generatedOutputs;
+
+    try {
+      const tcxBlob = new Blob([tcxGps], { type: 'application/vnd.garmin.tcx+xml' });
+      const tcxFile = new File([tcxBlob], 'New.tcx', { type: 'application/vnd.garmin.tcx+xml' });
+
+      const fitBlob = new Blob([fitGps], { type: 'application/octet-stream' });
+      const fitFile = new File([fitBlob], 'New_gps.fit', { type: 'application/octet-stream' });
+
+      if (navigator.canShare && navigator.canShare({ files: [tcxFile] })) {
+        await navigator.share({
+          title: `Workout (${res.total_distance_km}km)`,
+          text: `FitSync interval workout: ${res.total_time_str} • ${res.total_distance_km} km`,
+          files: [tcxFile, fitFile]
+        });
+      } else {
+        // Fallback to downloading New.tcx directly
+        downloadFile('tcxGps', 'New.tcx', 'application/vnd.garmin.tcx+xml');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        downloadFile('tcxGps', 'New.tcx', 'application/vnd.garmin.tcx+xml');
+      }
+    }
+  }
+
+  // --- Downloads ---
+  function downloadFile(key, fileName, mimeType) {
+    if (!state.generatedOutputs) return;
+    const data = state.generatedOutputs[key];
+    if (!data) return;
+
+    const blob = (data instanceof ArrayBuffer) ? new Blob([data], { type: mimeType }) : new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  }
+
+  async function downloadAllZip() {
+    if (!state.generatedOutputs) return;
+    const { tcxGps, tcxIndoor, gpx, csv, fitIndoor, fitGps } = state.generatedOutputs;
+
+    if (typeof JSZip === 'undefined') {
+      downloadFile('tcxGps', 'New.tcx', 'application/vnd.garmin.tcx+xml');
+      return;
+    }
+
+    const zip = new JSZip();
+    zip.file('New.tcx', tcxGps);
+    zip.file('New_indoor.tcx', tcxIndoor);
+    zip.file('New.gpx', gpx);
+    zip.file('New.csv', csv);
+    zip.file('New.fit', fitIndoor);
+    zip.file('New_gps.fit', fitGps);
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'FitSync_Workout_Files.zip';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  }
+
+  // --- Profiles Manager (LocalStorage) ---
+  const STORAGE_KEY = 'fitsync_mobile_profiles_v1';
+
+  function setupProfilesManager() {
+    loadProfilesFromStorage();
+
+    saveProfileBtn.addEventListener('click', () => {
+      const isSeg = (state.workoutMode === 'custom_segments');
+      const dist = isSeg ? segTargetDistIn.value : targetDistIn.value;
+      saveProfileTitle.value = isSeg ? `Manual Segments (${dist}km)` : `Repeats Run (${dist}km)`;
+      saveProfileModal.classList.remove('hidden');
+    });
+
+    closeSaveModalBtn.addEventListener('click', () => saveProfileModal.classList.add('hidden'));
+    cancelSaveModalBtn.addEventListener('click', () => saveProfileModal.classList.add('hidden'));
+
+    confirmSaveProfileBtn.addEventListener('click', () => {
+      const title = saveProfileTitle.value.trim() || 'My Workout';
+      saveCurrentProfile(title);
+      saveProfileModal.classList.add('hidden');
+    });
+
+    loadProfileBtn.addEventListener('click', loadSelectedProfile);
+    deleteProfileBtn.addEventListener('click', deleteSelectedProfile);
+    exportProfilesBtn.addEventListener('click', exportProfilesJson);
+  }
+
+  function getProfilesMap() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveProfilesMap(map) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+  }
+
+  function loadProfilesFromStorage() {
+    const map = getProfilesMap();
+    savedProfilesSelect.innerHTML = '<option value="">-- Select Saved Profile --</option>';
+    Object.keys(map).forEach(title => {
+      const opt = document.createElement('option');
+      opt.value = title;
+      opt.innerText = title;
+      savedProfilesSelect.appendChild(opt);
+    });
+  }
+
+  function saveCurrentProfile(title) {
+    const map = getProfilesMap();
+    const isSeg = (state.workoutMode === 'custom_segments');
+
+    if (isSeg) {
+      map[title] = {
+        title,
+        mode: 'custom_segments',
+        targetDistKm: parseFloat(segTargetDistIn.value) || 12.0,
+        deviceType: deviceSelect.value,
+        trimStationary: trimStationaryIn.checked,
+        segments: state.customSegments
+      };
+    } else {
+      map[title] = {
+        title,
+        mode: 'repeats',
+        warmupMin: wuDurIn.value,
+        warmupKmh: wuKmhIn.value,
+        repeats: repCountIn.value,
+        intMin: intDurIn.value,
+        intKmh: intKmhIn.value,
+        recMin: recDurIn.value,
+        recKmh: recKmhIn.value,
+        cdKmh: cdKmhIn.value,
+        cdMode: cdModeSelect.value,
+        targetDistKm: targetDistIn.value,
+        cdManualMin: cdManualDurIn.value,
+        deviceType: deviceSelect.value,
+        trimStationary: trimStationaryIn.checked
+      };
+    }
+
+    saveProfilesMap(map);
+    loadProfilesFromStorage();
+    savedProfilesSelect.value = title;
+    alert(`Saved profile: "${title}"`);
+  }
+
+  function loadSelectedProfile() {
+    const title = savedProfilesSelect.value;
+    if (!title) return;
+    const map = getProfilesMap();
+    const p = map[title];
+    if (!p) return;
+
+    if (p.deviceType) deviceSelect.value = p.deviceType;
+    if (p.trimStationary !== undefined) trimStationaryIn.checked = p.trimStationary;
+
+    if (p.mode === 'custom_segments' || p.segments) {
+      switchMode('custom_segments');
+      segTargetDistIn.value = p.targetDistKm || 12.0;
+      state.customSegments = p.segments || [];
+      autoCalculateFinalSegment();
+      renderSegmentsList();
+    } else {
+      switchMode('repeats');
+      wuDurIn.value = p.warmupMin;
+      wuKmhIn.value = p.warmupKmh;
+      wuPaceIn.value = FitEngine.kmhToPaceStr(p.warmupKmh);
+      repCountIn.value = p.repeats;
+      intDurIn.value = p.intMin;
+      intKmhIn.value = p.intKmh;
+      intPaceIn.value = FitEngine.kmhToPaceStr(p.intKmh);
+      recDurIn.value = p.recMin;
+      recKmhIn.value = p.recKmh;
+      recPaceIn.value = FitEngine.kmhToPaceStr(p.recKmh);
+      cdKmhIn.value = p.cdKmh;
+      cdPaceIn.value = FitEngine.kmhToPaceStr(p.cdKmh);
+      targetDistIn.value = p.targetDistKm;
+      cdModeSelect.value = p.cdMode || 'auto_distance';
+      cdManualDurIn.value = p.cdManualMin || 12;
+      cdManualGroup.classList.toggle('hidden', cdModeSelect.value !== 'manual');
+    }
+
+    updateWorkoutPreview();
+  }
+
+  function deleteSelectedProfile() {
+    const title = savedProfilesSelect.value;
+    if (!title) return;
+    if (!confirm(`Delete profile "${title}"?`)) return;
+
+    const map = getProfilesMap();
+    delete map[title];
+    saveProfilesMap(map);
+    loadProfilesFromStorage();
+  }
+
+  function exportProfilesJson() {
+    const map = getProfilesMap();
+    const str = JSON.stringify(map, null, 2);
+    const blob = new Blob([str], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fitsync_profiles.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  }
+
+  // --- Run Initialization ---
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>

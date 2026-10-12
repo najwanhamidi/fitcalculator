@@ -357,6 +357,111 @@
     return data;
   }
 
+  // --- Speed Phases & Synchronization Analysis (A.fit vs Q.fit) ---
+  function detectSpeedPhases(records, minDurationSec = 20) {
+    if (!records || records.length === 0) return [];
+
+    const speeds = records.map(r => parseFloat(r.speed || 0) || 0);
+    const runs = [];
+    let curSpeed = speeds[0];
+    let curCount = 0;
+    let curStartIdx = 0;
+
+    for (let i = 0; i < speeds.length; i++) {
+      const s = speeds[i];
+      if (Math.abs(s - curSpeed) < 0.05) {
+        curCount++;
+      } else {
+        if (curCount >= minDurationSec) {
+          runs.push({
+            speed_ms: parseFloat(curSpeed.toFixed(3)),
+            speed_kmh: msToKmh(curSpeed),
+            pace_str: kmhToPaceStr(msToKmh(curSpeed)),
+            duration_sec: curCount,
+            duration_min: parseFloat((curCount / 60.0).toFixed(2)),
+            start_idx: curStartIdx,
+            end_idx: curStartIdx + curCount - 1
+          });
+        }
+        curSpeed = s;
+        curCount = 1;
+        curStartIdx = i;
+      }
+    }
+
+    if (curCount >= minDurationSec) {
+      runs.push({
+        speed_ms: parseFloat(curSpeed.toFixed(3)),
+        speed_kmh: msToKmh(curSpeed),
+        pace_str: kmhToPaceStr(msToKmh(curSpeed)),
+        duration_sec: curCount,
+        duration_min: parseFloat((curCount / 60.0).toFixed(2)),
+        start_idx: curStartIdx,
+        end_idx: curStartIdx + curCount - 1
+      });
+    }
+
+    return runs;
+  }
+
+  function analyzeSync(aRecords, qRecords) {
+    if (!aRecords || !qRecords || aRecords.length === 0 || qRecords.length === 0) {
+      return { has_sync: false, error: 'One or both files contain no records.' };
+    }
+
+    const aFirstTs = parseInt(aRecords[0].timestamp || 0, 10);
+    const qFirstTs = parseInt(qRecords[0].timestamp || 0, 10);
+    const clockOffset = qFirstTs - aFirstTs;
+
+    // Movement start detection (speed >= 0.3 m/s or cadence >= 40)
+    let aMoveIdx = 0;
+    for (let i = 0; i < aRecords.length; i++) {
+      if ((aRecords[i].speed || 0) >= 0.3 || (aRecords[i].cadence || 0) >= 40) {
+        aMoveIdx = i;
+        break;
+      }
+    }
+
+    let qMoveIdx = 0;
+    for (let i = 0; i < qRecords.length; i++) {
+      if ((qRecords[i].speed || 0) >= 0.3 || (qRecords[i].cadence || 0) >= 40) {
+        qMoveIdx = i;
+        break;
+      }
+    }
+
+    const aMoveTs = parseInt(aRecords[aMoveIdx]?.timestamp || aFirstTs, 10);
+    const qMoveTs = parseInt(qRecords[qMoveIdx]?.timestamp || qFirstTs, 10);
+    const movementOffsetClock = qMoveTs - aMoveTs;
+
+    // Detect speed phases in Q
+    const qPhases = detectSpeedPhases(qRecords, 20);
+
+    // Stationary records at start of A
+    let aStationaryCount = 0;
+    for (let i = 0; i < Math.min(60, aRecords.length); i++) {
+      if ((aRecords[i].speed || 0) < 0.3) {
+        aStationaryCount++;
+      } else {
+        break;
+      }
+    }
+
+    return {
+      has_sync: true,
+      a_total_records: aRecords.length,
+      q_total_records: qRecords.length,
+      a_start_ts: aFirstTs,
+      q_start_ts: qFirstTs,
+      clock_offset_sec: clockOffset,
+      a_movement_index: aMoveIdx,
+      q_movement_index: qMoveIdx,
+      movement_offset_sec: movementOffsetClock,
+      a_leading_stationary_count: aStationaryCount,
+      detected_q_phases: qPhases
+    };
+  }
+
   // --- Workout Building & Plan Synthesis ---
   function buildWorkoutPlan(config) {
     const { mode } = config;
@@ -1037,6 +1142,8 @@
     formatDuration,
     getTrackCoords,
     decodeFitBinary,
+    detectSpeedPhases,
+    analyzeSync,
     buildWorkoutPlan,
     processWorkout,
     buildTCX,
