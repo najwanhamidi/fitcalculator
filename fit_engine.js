@@ -162,6 +162,8 @@
 
     const defs = {};
     const records = [];
+    const laps = [];
+    let session = null;
     let fileId = null;
     let deviceInfo = null;
     let lastTimestamp = 0;
@@ -191,6 +193,10 @@
         const recData = parseDataMessage(view, pos, def, ts);
         if (def.globalId === 20) {
           records.push(recData);
+        } else if (def.globalId === 19) {
+          laps.push(recData);
+        } else if (def.globalId === 18) {
+          session = recData;
         }
         pos += def.totalSize;
       } else {
@@ -248,6 +254,12 @@
           if (def.globalId === 20) {
             // Global 20 = record
             records.push(recData);
+          } else if (def.globalId === 19) {
+            // Global 19 = lap
+            laps.push(recData);
+          } else if (def.globalId === 18) {
+            // Global 18 = session
+            session = recData;
           } else if (def.globalId === 0 && !fileId) {
             // Global 0 = file_id
             fileId = recData;
@@ -263,6 +275,8 @@
 
     return {
       records,
+      laps,
+      session,
       fileId,
       deviceInfo,
       header: { headerSize, protoVer, profVer, dataSize }
@@ -336,17 +350,96 @@
         val = null;
       }
 
-      // Map common record fields (globalId 20)
+      // Map record fields (globalId 20)
       if (def.globalId === 20) {
         if (f.num === 253 && val !== null) data.timestamp = val;
         else if (f.num === 3 && val !== null && val !== 255) data.heart_rate = val;
         else if (f.num === 4 && val !== null && val !== 255) data.cadence = val;
-        else if (f.num === 39 && val !== null && val !== 65535) data.cadence = Math.round(val / 256.0); // cadence256
+        else if (f.num === 53 && val !== null && val !== 255) {
+          data.fractional_cadence = val / 128.0;
+          data.raw_fractional_cadence = val;
+        }
+        else if (f.num === 52 && val !== null && val !== 65535) {
+          data.cadence256 = val / 256.0;
+          data.raw_cadence256 = val;
+          if (data.cadence === undefined) data.cadence = Math.floor(val / 256.0);
+        }
+        else if (f.num === 85 && val !== null && val !== 65535) {
+          data.step_length = val / 10.0;
+          data.raw_step_length = val;
+        }
+        else if (f.num === 39 && val !== null && val !== 65535) {
+          data.vertical_oscillation = val / 10.0;
+          data.raw_vertical_oscillation = val;
+        }
+        else if (f.num === 83 && val !== null && val !== 65535) {
+          data.vertical_ratio = val / 100.0;
+          data.raw_vertical_ratio = val;
+        }
+        else if (f.num === 41 && val !== null && val !== 65535) {
+          data.stance_time = val / 10.0;
+          data.raw_stance_time = val;
+        }
         else if (f.num === 5 && val !== null && val !== 4294967295) data.distance = val / 100.0; // meters
         else if (f.num === 6 && val !== null && val !== 65535) data.speed = val / 1000.0; // m/s
         else if (f.num === 73 && val !== null && val !== 4294967295) data.speed = val / 1000.0; // enhanced_speed
         else if (f.num === 0 && val !== null && val !== 2147483647) data.lat = val * (180.0 / 2147483648);
         else if (f.num === 1 && val !== null && val !== 2147483647) data.lon = val * (180.0 / 2147483648);
+      } else if (def.globalId === 19) {
+        // Map lap fields (globalId 19)
+        if (f.num === 254 && val !== null && val !== 65535) data.message_index = val;
+        else if (f.num === 253 && val !== null) data.timestamp = val;
+        else if (f.num === 2 && val !== null) data.start_time = val;
+        else if (f.num === 7 && val !== null && val !== 4294967295) data.total_elapsed_time = val / 1000.0;
+        else if (f.num === 8 && val !== null && val !== 4294967295) data.total_timer_time = val / 1000.0;
+        else if (f.num === 9 && val !== null && val !== 4294967295) data.total_distance = val / 100.0;
+        else if (f.num === 11 && val !== null && val !== 65535) data.total_calories = val;
+        else if (f.num === 15 && val !== null && val !== 255) data.avg_heart_rate = val;
+        else if (f.num === 16 && val !== null && val !== 255) data.max_heart_rate = val;
+        else if (f.num === 17 && val !== null && val !== 255) data.avg_cadence = val;
+        else if (f.num === 18 && val !== null && val !== 255) data.max_cadence = val;
+        else if (f.num === 80 && val !== null && val !== 255) {
+          data.avg_fractional_cadence = val / 128.0;
+          data.raw_avg_fractional_cadence = val;
+        }
+        else if (f.num === 120 && val !== null && val !== 65535) {
+          data.avg_step_length = val / 10.0;
+          data.raw_avg_step_length = val;
+        }
+        data[`f_${f.num}`] = val;
+      } else if (def.globalId === 18) {
+        // Map session fields (globalId 18)
+        if (f.num === 253 && val !== null) data.timestamp = val;
+        else if (f.num === 2 && val !== null) data.start_time = val;
+        else if (f.num === 5 && val !== null && val !== 255) data.sport = val;
+        else if (f.num === 6 && val !== null && val !== 255) data.sub_sport = val;
+        else if (f.num === 10 && val !== null && val !== 4294967295) data.total_cycles = val;
+        else if (f.num === 11 && val !== null && val !== 65535) data.total_calories = val;
+        else if (f.num === 16 && val !== null && val !== 255) data.avg_heart_rate = val;
+        else if (f.num === 17 && val !== null && val !== 255) data.max_heart_rate = val;
+        else if (f.num === 18 && val !== null && val !== 255) data.avg_cadence = val;
+        else if (f.num === 19 && val !== null && val !== 255) data.max_cadence = val;
+        else if (f.num === 92 && val !== null && val !== 255) {
+          data.avg_fractional_cadence = val / 128.0;
+          data.raw_avg_fractional_cadence = val;
+        }
+        else if (f.num === 134 && val !== null && val !== 65535) {
+          data.avg_step_length = val / 10.0;
+          data.raw_avg_step_length = val;
+        }
+        else if (f.num === 89 && val !== null && val !== 65535) {
+          data.avg_vertical_oscillation = val / 10.0;
+          data.raw_avg_vertical_oscillation = val;
+        }
+        else if (f.num === 91 && val !== null && val !== 65535) {
+          data.avg_stance_time = val / 10.0;
+          data.raw_avg_stance_time = val;
+        }
+        else if (f.num === 132 && val !== null && val !== 65535) {
+          data.avg_vertical_ratio = val / 100.0;
+          data.raw_avg_vertical_ratio = val;
+        }
+        data[`f_${f.num}`] = val;
       } else {
         data[`f_${f.num}`] = val;
       }
@@ -463,6 +556,31 @@
   }
 
   // --- Workout Building & Plan Synthesis ---
+  function parseDurationToSeconds(dur, secPart = 0) {
+    if (dur === null || dur === undefined) return Math.max(0, parseInt(secPart, 10) || 0);
+    if (typeof dur === 'object') {
+      const m = parseInt(dur.min, 10) || 0;
+      const s = parseInt(dur.sec !== undefined ? dur.sec : secPart, 10) || 0;
+      return Math.max(0, m * 60 + s);
+    }
+    if (typeof dur === 'string') {
+      const str = dur.trim();
+      if (str.includes(':')) {
+        const parts = str.split(':');
+        const m = parseInt(parts[0], 10) || 0;
+        const s = parseFloat(parts[1]) || 0;
+        return Math.max(0, Math.round(m * 60 + s));
+      }
+      const val = parseFloat(str);
+      if (!isNaN(val)) {
+        return Math.max(0, Math.round(val * 60 + (parseInt(secPart, 10) || 0)));
+      }
+    }
+    const fVal = parseFloat(dur) || 0;
+    const sVal = parseInt(secPart, 10) || 0;
+    return Math.max(0, Math.round(fVal * 60 + sVal));
+  }
+
   function buildWorkoutPlan(config) {
     const { mode } = config;
 
@@ -474,15 +592,31 @@
   }
 
   function buildRepeatsPlan(config) {
-    const warmupDur = Math.round((parseFloat(config.warmupMin) || 0) * 60);
+    const calcMode = config.calcMode || 'duration'; // 'duration' or 'distance'
     const warmupSpd = kmhToMs(config.warmupKmh || 10.6);
+    let warmupDur = 0;
+    if (calcMode === 'distance' && parseFloat(config.warmupDistKm) > 0 && warmupSpd > 0) {
+      warmupDur = Math.round((parseFloat(config.warmupDistKm) * 1000.0) / warmupSpd);
+    } else {
+      warmupDur = parseDurationToSeconds(config.warmupMin, config.warmupSec);
+    }
 
     const repeats = parseInt(config.repeats, 10) || 3;
-    const intDur = Math.round((parseFloat(config.intMin) || 0) * 60);
     const intSpd = kmhToMs(config.intKmh || 13.7);
+    let intDur = 0;
+    if (calcMode === 'distance' && parseFloat(config.intDistKm) > 0 && intSpd > 0) {
+      intDur = Math.round((parseFloat(config.intDistKm) * 1000.0) / intSpd);
+    } else {
+      intDur = parseDurationToSeconds(config.intMin, config.intSec);
+    }
 
-    const recDur = Math.round((parseFloat(config.recMin) || 0) * 60);
     const recSpd = kmhToMs(config.recKmh || 5.7);
+    let recDur = 0;
+    if (calcMode === 'distance' && parseFloat(config.recDistKm) > 0 && recSpd > 0) {
+      recDur = Math.round((parseFloat(config.recDistKm) * 1000.0) / recSpd);
+    } else {
+      recDur = parseDurationToSeconds(config.recMin, config.recSec);
+    }
 
     const cdSpd = kmhToMs(config.cdKmh || 10.6);
     const cdMode = config.cdMode || 'auto_distance';
@@ -498,7 +632,11 @@
         cdDur = Math.round(remDist / cdSpd);
       }
     } else {
-      cdDur = Math.round((parseFloat(config.cdManualMin) || 0) * 60);
+      if (calcMode === 'distance' && parseFloat(config.cdManualDistKm) > 0 && cdSpd > 0) {
+        cdDur = Math.round((parseFloat(config.cdManualDistKm) * 1000.0) / cdSpd);
+      } else {
+        cdDur = parseDurationToSeconds(config.cdManualMin, config.cdManualSec);
+      }
     }
 
     const laps = [];
@@ -563,9 +701,19 @@
     const rawSegments = config.segments || [];
     const targetDistM = (parseFloat(config.targetDistKm) || 0) * 1000.0;
     const autoCalcFinal = config.autoCalcFinal !== false;
+    const globalCalcMode = config.calcMode || 'duration';
 
     if (rawSegments.length === 0) {
       return { laps: [], targetSpeeds: [] };
+    }
+
+    function calcSegDur(s) {
+      const spd = kmhToMs(s.speedKmh || 0);
+      const mode = s.calcMode || globalCalcMode;
+      if (mode === 'distance' && parseFloat(s.distKm) > 0 && spd > 0) {
+        return Math.round((parseFloat(s.distKm) * 1000.0) / spd);
+      }
+      return parseDurationToSeconds(s.min !== undefined ? s.min : s.durationMin, s.sec);
     }
 
     // Prior distance calculation
@@ -573,14 +721,14 @@
     let priorDistM = 0;
     for (let i = 0; i < num - 1; i++) {
       const s = rawSegments[i];
-      const dur = Math.round((parseFloat(s.durationMin) || 0) * 60);
+      const dur = calcSegDur(s);
       const spd = kmhToMs(s.speedKmh || 0);
       priorDistM += dur * spd;
     }
 
     const lastSeg = Object.assign({}, rawSegments[num - 1]);
-    let lastDur = Math.round((parseFloat(lastSeg.durationMin) || 0) * 60);
     const lastSpd = kmhToMs(lastSeg.speedKmh || 0);
+    let lastDur = calcSegDur(lastSeg);
 
     if (autoCalcFinal && targetDistM > 0 && lastSeg.autoCalc) {
       const remDist = Math.max(0, targetDistM - priorDistM);
@@ -595,7 +743,7 @@
 
     for (let i = 0; i < num; i++) {
       const s = (i === num - 1) ? lastSeg : rawSegments[i];
-      const dur = (i === num - 1) ? lastDur : Math.round((parseFloat(s.durationMin) || 0) * 60);
+      const dur = (i === num - 1) ? lastDur : calcSegDur(s);
       const spd = kmhToMs(s.speedKmh || 0);
       if (dur <= 0) continue;
 
@@ -639,8 +787,7 @@
       const maxDroppable = Math.max(0, recs.length - 10);
       for (let i = 0; i < maxDroppable; i++) {
         const s = recs[i].speed !== undefined ? recs[i].speed : 0;
-        const cad = recs[i].cadence !== undefined ? recs[i].cadence : 0;
-        if (s < stationaryThreshold && cad < 40) {
+        if (s < stationaryThreshold) {
           droppedCount++;
         } else {
           break;
@@ -660,10 +807,10 @@
 
     const startTs = (trimmedRecs[0] && trimmedRecs[0].timestamp) ? trimmedRecs[0].timestamp : 1000000000;
 
-    // 4. Pad or trim records to match totalRecords
+    // 4. Pad or trim records to match totalRecords (preserving exact A.fit cadence & running dynamics)
     const finalRecs = [];
     const sourceLen = trimmedRecs.length;
-    const lastRec = trimmedRecs[sourceLen - 1] || { heart_rate: 140, cadence: 88 };
+    const lastRec = trimmedRecs[sourceLen - 1] || { heart_rate: 140, cadence: null };
 
     for (let i = 0; i < totalRecords; i++) {
       let r;
@@ -676,8 +823,8 @@
       const spd = targetSpeeds[i];
       r.timestamp = startTs + i;
       r.calc_speed = spd;
-      r.heart_rate = r.heart_rate || 140;
-      r.cadence = r.cadence || 88;
+      r.heart_rate = (r.heart_rate !== undefined && r.heart_rate !== null) ? r.heart_rate : 140;
+      r.cadence = (r.cadence !== undefined && r.cadence !== null) ? r.cadence : null;
 
       finalRecs.push(r);
     }
@@ -696,10 +843,19 @@
       r.semilon = track.semilon;
     }
 
-    // 6. Build Lap Summaries with Real HR & Cadence
+    // Overall A.fit cadence and HR statistics
+    const allCads = finalRecs.map(x => x.cadence).filter(x => x !== null && x !== undefined);
+    const overallAvgCad = allCads.length > 0 ? Math.round(allCads.reduce((a, b) => a + b, 0) / allCads.length) : 0;
+    const overallMaxCad = allCads.length > 0 ? Math.max(...allCads) : overallAvgCad;
+    const allHrs = finalRecs.map(x => x.heart_rate).filter(x => x && x > 30);
+    const overallAvgHr = allHrs.length > 0 ? Math.round(allHrs.reduce((a, b) => a + b, 0) / allHrs.length) : 140;
+    const overallMaxHr = allHrs.length > 0 ? Math.max(...allHrs) : 150;
+
+    // 6. Build Lap Summaries strictly following A.fit cadence & telemetry
     let recPtr = 0;
     let currLapStart = startTs;
     const lapsSummary = [];
+    const exactLapMatch = Boolean(decoded.laps && decoded.laps.length === plan.laps.length);
 
     for (let i = 0; i < plan.laps.length; i++) {
       const spec = plan.laps[i];
@@ -709,14 +865,51 @@
 
       const lapRecs = finalRecs.slice(recPtr, recPtr + dur);
       const hrs = lapRecs.map(x => x.heart_rate).filter(x => x && x > 30);
-      const cads = lapRecs.map(x => x.cadence).filter(x => x && x > 20);
+      const cads = lapRecs.map(x => x.cadence).filter(x => x !== null && x !== undefined);
+      const cads256 = lapRecs.map(x => x.cadence256).filter(x => x !== null && x !== undefined);
+      const steps = lapRecs.map(x => x.step_length).filter(x => x !== null && x !== undefined);
 
-      const avgHr = hrs.length > 0 ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : 140;
-      const maxHr = hrs.length > 0 ? Math.max(...hrs) : 150;
-      const avgCad = cads.length > 0 ? Math.round(cads.reduce((a, b) => a + b, 0) / cads.length) : 88;
+      const recAvgHr = hrs.length > 0 ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : overallAvgHr;
+      const recMaxHr = hrs.length > 0 ? Math.max(...hrs) : Math.max(recAvgHr, 150);
+
+      let recAvgCad = overallAvgCad;
+      if (cads256.length > 0) {
+        recAvgCad = Math.round(cads256.reduce((a, b) => a + b, 0) / cads256.length);
+      } else if (cads.length > 0) {
+        recAvgCad = Math.round(cads.reduce((a, b) => a + b, 0) / cads.length);
+      }
+      const recMaxCad = cads.length > 0 ? Math.max(...cads) : recAvgCad;
+      const recAvgStep = steps.length > 0 ? Math.round((steps.reduce((a, b) => a + b, 0) / steps.length) * 10) / 10 : null;
 
       let lapCalories = Math.round(dur * (spd / 2.944) * 0.14);
+      if (spd <= 2.0) lapCalories = Math.round(dur * 0.08);
       if (lapCalories < 5) lapCalories = 5;
+
+      let avgCad = recAvgCad;
+      let maxCad = recMaxCad;
+      let avgHr = recAvgHr;
+      let maxHr = recMaxHr;
+      let avgStepLength = recAvgStep;
+      let rawAvgStepLength = recAvgStep !== null ? Math.round(recAvgStep * 10) : 65535;
+      let avgFracCad = null;
+      let rawAvgFracCad = 255;
+
+      if (exactLapMatch) {
+        const origLap = decoded.laps[i];
+        if (origLap.avg_cadence !== undefined && origLap.avg_cadence !== null) avgCad = origLap.avg_cadence;
+        if (origLap.max_cadence !== undefined && origLap.max_cadence !== null) maxCad = origLap.max_cadence;
+        if (origLap.avg_heart_rate !== undefined && origLap.avg_heart_rate !== null) avgHr = origLap.avg_heart_rate;
+        if (origLap.max_heart_rate !== undefined && origLap.max_heart_rate !== null) maxHr = origLap.max_heart_rate;
+        if (origLap.total_calories !== undefined && origLap.total_calories !== null) lapCalories = origLap.total_calories;
+        if (origLap.avg_step_length !== undefined && origLap.avg_step_length !== null) {
+          avgStepLength = origLap.avg_step_length;
+          rawAvgStepLength = origLap.raw_avg_step_length !== undefined ? origLap.raw_avg_step_length : Math.round(origLap.avg_step_length * 10);
+        }
+        if (origLap.avg_fractional_cadence !== undefined && origLap.avg_fractional_cadence !== null) {
+          avgFracCad = origLap.avg_fractional_cadence;
+          rawAvgFracCad = origLap.raw_avg_fractional_cadence !== undefined ? origLap.raw_avg_fractional_cadence : Math.round(origLap.avg_fractional_cadence * 128);
+        }
+      }
 
       lapsSummary.push({
         lap_index: i,
@@ -729,6 +922,11 @@
         avg_hr: avgHr,
         max_hr: maxHr,
         avg_cadence: avgCad,
+        max_cadence: maxCad,
+        avg_fractional_cadence: avgFracCad,
+        raw_avg_fractional_cadence: rawAvgFracCad,
+        avg_step_length: avgStepLength,
+        raw_avg_step_length: rawAvgStepLength,
         calories: lapCalories,
         intensity: spec.intensity || 'Active',
         start_time: currLapStart
@@ -740,6 +938,27 @@
 
     const totalDistM = cumDist;
     const avgSpdMs = totalDistM / totalRecords;
+    const totalLapCalories = lapsSummary.reduce((sum, l) => sum + (l.calories || 0), 0);
+
+    const origSess = decoded.session || {};
+    const sessionSummary = {
+      avg_cadence: origSess.avg_cadence !== undefined ? origSess.avg_cadence : overallAvgCad,
+      max_cadence: origSess.max_cadence !== undefined ? origSess.max_cadence : overallMaxCad,
+      avg_fractional_cadence: origSess.avg_fractional_cadence !== undefined ? origSess.avg_fractional_cadence : null,
+      raw_avg_fractional_cadence: origSess.raw_avg_fractional_cadence !== undefined ? origSess.raw_avg_fractional_cadence : 255,
+      total_cycles: origSess.total_cycles !== undefined ? origSess.total_cycles : 4294967295,
+      avg_step_length: origSess.avg_step_length !== undefined ? origSess.avg_step_length : null,
+      raw_avg_step_length: origSess.raw_avg_step_length !== undefined ? origSess.raw_avg_step_length : 65535,
+      avg_vertical_oscillation: origSess.avg_vertical_oscillation !== undefined ? origSess.avg_vertical_oscillation : null,
+      raw_avg_vertical_oscillation: origSess.raw_avg_vertical_oscillation !== undefined ? origSess.raw_avg_vertical_oscillation : 65535,
+      avg_stance_time: origSess.avg_stance_time !== undefined ? origSess.avg_stance_time : null,
+      raw_avg_stance_time: origSess.raw_avg_stance_time !== undefined ? origSess.raw_avg_stance_time : 65535,
+      avg_vertical_ratio: origSess.avg_vertical_ratio !== undefined ? origSess.avg_vertical_ratio : null,
+      raw_avg_vertical_ratio: origSess.raw_avg_vertical_ratio !== undefined ? origSess.raw_avg_vertical_ratio : 65535,
+      avg_heart_rate: origSess.avg_heart_rate !== undefined ? origSess.avg_heart_rate : overallAvgHr,
+      max_heart_rate: origSess.max_heart_rate !== undefined ? origSess.max_heart_rate : overallMaxHr,
+      total_calories: origSess.total_calories !== undefined ? origSess.total_calories : totalLapCalories
+    };
 
     const workoutResult = {
       success: true,
@@ -755,6 +974,7 @@
       device_type: deviceType,
       start_ts: startTs,
       laps: lapsSummary,
+      session: sessionSummary,
       records: finalRecs
     };
 
@@ -803,6 +1023,7 @@
       for (let j = 0; j < lapRecs.length; j++) {
         const r = lapRecs[j];
         const ptIso = fitTsToIso(r.timestamp);
+        const hasCad = (r.cadence !== null && r.cadence !== undefined);
         lines.push('          <Trackpoint>');
         lines.push(`            <Time>${ptIso}</Time>`);
         if (withGps && r.lat && r.lon) {
@@ -814,10 +1035,15 @@
         }
         lines.push(`            <DistanceMeters>${r.calc_distance.toFixed(2)}</DistanceMeters>`);
         lines.push(`            <HeartRateBpm><Value>${r.heart_rate}</Value></HeartRateBpm>`);
-        lines.push(`            <Cadence>${r.cadence}</Cadence>`);
+        if (hasCad) {
+          lines.push(`            <Cadence>${Math.round(r.cadence)}</Cadence>`);
+        }
         lines.push('            <Extensions>');
         lines.push('              <ns3:TPX>');
         lines.push(`                <ns3:Speed>${r.calc_speed.toFixed(3)}</ns3:Speed>`);
+        if (hasCad) {
+          lines.push(`                <ns3:RunCadence>${Math.round(r.cadence)}</ns3:RunCadence>`);
+        }
         lines.push('              </ns3:TPX>');
         lines.push('            </Extensions>');
         lines.push('          </Trackpoint>');
@@ -870,7 +1096,9 @@
       lines.push('          <gpxtpx:TrackPointExtension>');
       lines.push(`            <gpxtpx:speed>${r.calc_speed.toFixed(3)}</gpxtpx:speed>`);
       lines.push(`            <gpxtpx:hr>${r.heart_rate}</gpxtpx:hr>`);
-      lines.push(`            <gpxtpx:cad>${r.cadence}</gpxtpx:cad>`);
+      if (r.cadence !== null && r.cadence !== undefined) {
+        lines.push(`            <gpxtpx:cad>${Math.round(r.cadence)}</gpxtpx:cad>`);
+      }
       lines.push('          </gpxtpx:TrackPointExtension>');
       lines.push('        </extensions>');
       lines.push('      </trkpt>');
@@ -888,7 +1116,7 @@
     const lines = [];
 
     // 1. file_id
-    lines.push('Type,Local Number,Message,Field 1,Value 1,Units 1,Field 2,Value 2,Units 2,Field 3,Value 3,Units 3,Field 4,Value 4,Units 4,Field 5,Value 5,Units 5,');
+    lines.push('Type,Local Number,Message,Field 1,Value 1,Units 1,Field 2,Value 2,Units 2,Field 3,Value 3,Units 3,Field 4,Value 4,Units 4,Field 5,Value 5,Units 5,Field 6,Value 6,Units 6,Field 7,Value 7,Units 7,Field 8,Value 8,Units 8,Field 9,Value 9,Units 9,Field 10,Value 10,Units 10,Field 11,Value 11,Units 11,Field 12,Value 12,Units 12,Field 13,Value 13,Units 13,Field 14,Value 14,Units 14,Field 15,Value 15,Units 15,');
     lines.push('Definition,0,file_id,type,1,,manufacturer,1,,product,1,,serial_number,1,,time_created,1,,');
     lines.push(`Data,0,file_id,type,"4",,manufacturer,"339",,product,"133",,serial_number,"8716547",,time_created,"${result.start_ts}",,`);
 
@@ -902,17 +1130,19 @@
 
     // 4. record definition & data
     if (withGps) {
-      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,enhanced_speed,1,,position_lat,1,,position_long,1,,');
+      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,cadence256,1,,enhanced_speed,1,,position_lat,1,,position_long,1,,');
     } else {
-      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,enhanced_speed,1,,');
+      lines.push('Definition,3,record,timestamp,1,,distance,1,,speed,1,,heart_rate,1,,cadence,1,,cadence256,1,,enhanced_speed,1,,');
     }
 
     for (let i = 0; i < result.records.length; i++) {
       const r = result.records[i];
+      const cadVal = (r.cadence !== null && r.cadence !== undefined) ? r.cadence : 0;
+      const cad256Val = (r.cadence256 !== null && r.cadence256 !== undefined) ? r.cadence256.toFixed(1) : cadVal.toFixed(1);
       if (withGps) {
-        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${r.cadence}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,position_lat,"${r.semilat}",semicircles,position_long,"${r.semilon}",semicircles,`);
+        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${cadVal}",rpm,cadence256,"${cad256Val}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,position_lat,"${r.semilat}",semicircles,position_long,"${r.semilon}",semicircles,`);
       } else {
-        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${r.cadence}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,`);
+        lines.push(`Data,3,record,timestamp,"${r.timestamp}",s,distance,"${r.calc_distance.toFixed(2)}",m,speed,"${r.calc_speed.toFixed(3)}",m/s,heart_rate,"${r.heart_rate}",bpm,cadence,"${cadVal}",rpm,cadence256,"${cad256Val}",rpm,enhanced_speed,"${r.calc_speed.toFixed(3)}",m/s,`);
       }
     }
 
@@ -928,8 +1158,14 @@
     const totalSec = result.total_time_sec;
     const sessionEnd = result.start_ts + totalSec;
     const avgSpd = result.total_distance_m / totalSec;
-    lines.push('Definition,5,session,timestamp,1,,start_time,1,,total_elapsed_time,1,,total_timer_time,1,,total_distance,1,,avg_speed,1,,max_speed,1,,num_laps,1,,first_lap_index,1,,sport,1,,');
-    lines.push(`Data,5,session,timestamp,"${sessionEnd}",s,start_time,"${result.start_ts}",,total_elapsed_time,"${totalSec.toFixed(3)}",s,total_timer_time,"${totalSec.toFixed(3)}",s,total_distance,"${result.total_distance_m.toFixed(2)}",m,avg_speed,"${avgSpd.toFixed(3)}",m/s,max_speed,"${(result.max_speed_kmh / 3.6).toFixed(3)}",m/s,num_laps,"${result.laps.length}",,first_lap_index,"0",,sport,"1",,`);
+    const sess = result.session || {};
+    const sessAvgCad = sess.avg_cadence !== undefined ? sess.avg_cadence : 86;
+    const sessMaxCad = sess.max_cadence !== undefined ? sess.max_cadence : 95;
+    const sessAvgHr = sess.avg_heart_rate !== undefined ? sess.avg_heart_rate : 144;
+    const sessMaxHr = sess.max_heart_rate !== undefined ? sess.max_heart_rate : 164;
+    const sessCal = sess.total_calories !== undefined ? sess.total_calories : 600;
+    lines.push('Definition,5,session,timestamp,1,,start_time,1,,total_elapsed_time,1,,total_timer_time,1,,total_distance,1,,total_calories,1,,avg_heart_rate,1,,max_heart_rate,1,,avg_cadence,1,,max_cadence,1,,avg_speed,1,,max_speed,1,,first_lap_index,1,,num_laps,1,,sport,1,,');
+    lines.push(`Data,5,session,timestamp,"${sessionEnd}",s,start_time,"${result.start_ts}",,total_elapsed_time,"${totalSec.toFixed(3)}",s,total_timer_time,"${totalSec.toFixed(3)}",s,total_distance,"${result.total_distance_m.toFixed(2)}",m,total_calories,"${sessCal}",kcal,avg_heart_rate,"${sessAvgHr}",bpm,max_heart_rate,"${sessMaxHr}",bpm,avg_running_cadence,"${sessAvgCad}",rpm,max_running_cadence,"${sessMaxCad}",rpm,avg_speed,"${avgSpd.toFixed(3)}",m/s,max_speed,"${(result.max_speed_kmh / 3.6).toFixed(3)}",m/s,first_lap_index,"0",,num_laps,"${result.laps.length}",,sport,"1",,`);
 
     // 7. activity
     lines.push('Definition,6,activity,timestamp,1,,total_timer_time,1,,num_sessions,1,,type,1,,event,1,,event_type,1,,');
@@ -993,14 +1229,20 @@
     pushByte(0x02);
     pushUint32(result.start_ts); pushByte(0); pushByte(0);
 
-    // 4. Def 3: record (global 20)
-    const numRecFields = withGps ? 7 : 5;
+    // 4. Def 3: record (global 20) — includes exact A.fit cadence, fractional_cadence, cadence256, and running dynamics
+    const numRecFields = withGps ? 13 : 11;
     pushByte(0x43); pushByte(0x00); pushByte(0x00); pushUint16(20); pushByte(numRecFields);
     pushByte(253); pushByte(4); pushByte(134);   // timestamp: uint32
     pushByte(5); pushByte(4); pushByte(134);     // distance: uint32 (scale 100)
     pushByte(6); pushByte(2); pushByte(132);     // speed: uint16 (scale 1000)
     pushByte(3); pushByte(1); pushByte(2);       // heart_rate: uint8
     pushByte(4); pushByte(1); pushByte(2);       // cadence: uint8
+    pushByte(53); pushByte(1); pushByte(2);      // fractional_cadence: uint8 (scale 128)
+    pushByte(52); pushByte(2); pushByte(132);    // cadence256: uint16 (scale 256)
+    pushByte(85); pushByte(2); pushByte(132);    // step_length: uint16 (scale 10, mm)
+    pushByte(39); pushByte(2); pushByte(132);    // vertical_oscillation: uint16 (scale 10, mm)
+    pushByte(83); pushByte(2); pushByte(132);    // vertical_ratio: uint16 (scale 100, %)
+    pushByte(41); pushByte(2); pushByte(132);    // stance_time: uint16 (scale 10, ms)
     if (withGps) {
       pushByte(0); pushByte(4); pushByte(133);   // position_lat: sint32
       pushByte(1); pushByte(4); pushByte(133);   // position_long: sint32
@@ -1009,12 +1251,29 @@
     // Data 3: records
     for (let i = 0; i < result.records.length; i++) {
       const r = result.records[i];
+      const hasCad = (r.cadence !== null && r.cadence !== undefined);
+      const cadByte = hasCad ? Math.round(r.cadence) : 255;
+      const fracCadByte = (r.raw_fractional_cadence !== undefined && r.raw_fractional_cadence !== null) ? r.raw_fractional_cadence : 255;
+      const cad256U16 = (r.raw_cadence256 !== undefined && r.raw_cadence256 !== null)
+        ? r.raw_cadence256
+        : (hasCad ? Math.round(r.cadence * 256) : 65535);
+      const stepU16 = (r.raw_step_length !== undefined && r.raw_step_length !== null) ? r.raw_step_length : 65535;
+      const voU16 = (r.raw_vertical_oscillation !== undefined && r.raw_vertical_oscillation !== null) ? r.raw_vertical_oscillation : 65535;
+      const vrU16 = (r.raw_vertical_ratio !== undefined && r.raw_vertical_ratio !== null) ? r.raw_vertical_ratio : 65535;
+      const stU16 = (r.raw_stance_time !== undefined && r.raw_stance_time !== null) ? r.raw_stance_time : 65535;
+
       pushByte(0x03);
       pushUint32(r.timestamp);
       pushUint32(Math.round(r.calc_distance * 100));
       pushUint16(Math.round(r.calc_speed * 1000));
-      pushByte(r.heart_rate);
-      pushByte(r.cadence);
+      pushByte(r.heart_rate !== null && r.heart_rate !== undefined ? r.heart_rate : 255);
+      pushByte(cadByte);
+      pushByte(fracCadByte);
+      pushUint16(cad256U16);
+      pushUint16(stepU16);
+      pushUint16(voU16);
+      pushUint16(vrU16);
+      pushUint16(stU16);
       if (withGps) {
         pushInt32(r.semilat);
         pushInt32(r.semilon);
@@ -1022,7 +1281,7 @@
     }
 
     // 5. Def 4: lap (global 19)
-    pushByte(0x44); pushByte(0x00); pushByte(0x00); pushUint16(19); pushByte(12);
+    pushByte(0x44); pushByte(0x00); pushByte(0x00); pushUint16(19); pushByte(15);
     pushByte(253); pushByte(4); pushByte(134);   // timestamp
     pushByte(2); pushByte(4); pushByte(134);     // start_time
     pushByte(7); pushByte(4); pushByte(134);     // total_elapsed_time (scale 1000)
@@ -1034,6 +1293,9 @@
     pushByte(15); pushByte(1); pushByte(2);      // avg_heart_rate
     pushByte(16); pushByte(1); pushByte(2);      // max_heart_rate
     pushByte(17); pushByte(1); pushByte(2);      // avg_cadence
+    pushByte(18); pushByte(1); pushByte(2);      // max_cadence
+    pushByte(80); pushByte(1); pushByte(2);      // avg_fractional_cadence
+    pushByte(120); pushByte(2); pushByte(132);   // avg_step_length
     pushByte(254); pushByte(2); pushByte(132);   // message_index
 
     // Data 4: laps
@@ -1051,25 +1313,40 @@
       pushUint16(l.calories);
       pushByte(l.avg_hr);
       pushByte(l.max_hr);
-      pushByte(l.avg_cadence);
+      pushByte(l.avg_cadence !== null && l.avg_cadence !== undefined ? l.avg_cadence : 255);
+      pushByte(l.max_cadence !== null && l.max_cadence !== undefined ? l.max_cadence : 255);
+      pushByte(l.raw_avg_fractional_cadence !== undefined ? l.raw_avg_fractional_cadence : 255);
+      pushUint16(l.raw_avg_step_length !== undefined ? l.raw_avg_step_length : 65535);
       pushUint16(l.lap_index);
     }
 
-    // 6. Def 5: session (global 18)
+    // 6. Def 5: session (global 18) — includes A.fit session cadence, strides, HR, calories, and running dynamics
     const totalSec = result.total_time_sec;
     const sessionEnd = result.start_ts + totalSec;
     const avgSpd = result.total_distance_m / totalSec;
+    const sess = result.session || {};
 
-    pushByte(0x45); pushByte(0x00); pushByte(0x00); pushUint16(18); pushByte(10);
+    pushByte(0x45); pushByte(0x00); pushByte(0x00); pushUint16(18); pushByte(21);
     pushByte(253); pushByte(4); pushByte(134);   // timestamp
     pushByte(2); pushByte(4); pushByte(134);     // start_time
     pushByte(7); pushByte(4); pushByte(134);     // total_elapsed_time
     pushByte(8); pushByte(4); pushByte(134);     // total_timer_time
     pushByte(9); pushByte(4); pushByte(134);     // total_distance
+    pushByte(10); pushByte(4); pushByte(134);    // total_cycles (strides)
+    pushByte(11); pushByte(2); pushByte(132);    // total_calories
     pushByte(14); pushByte(2); pushByte(132);    // avg_speed
     pushByte(15); pushByte(2); pushByte(132);    // max_speed
-    pushByte(25); pushByte(2); pushByte(132);    // num_laps
-    pushByte(26); pushByte(2); pushByte(132);    // first_lap_index
+    pushByte(16); pushByte(1); pushByte(2);      // avg_heart_rate
+    pushByte(17); pushByte(1); pushByte(2);      // max_heart_rate
+    pushByte(18); pushByte(1); pushByte(2);      // avg_cadence
+    pushByte(19); pushByte(1); pushByte(2);      // max_cadence
+    pushByte(92); pushByte(1); pushByte(2);      // avg_fractional_cadence
+    pushByte(134); pushByte(2); pushByte(132);   // avg_step_length
+    pushByte(89); pushByte(2); pushByte(132);    // avg_vertical_oscillation
+    pushByte(91); pushByte(2); pushByte(132);    // avg_stance_time
+    pushByte(132); pushByte(2); pushByte(132);   // avg_vertical_ratio
+    pushByte(25); pushByte(2); pushByte(132);    // first_lap_index
+    pushByte(26); pushByte(2); pushByte(132);    // num_laps
     pushByte(5); pushByte(1); pushByte(0);       // sport (1 = running)
 
     // Data 5: session
@@ -1079,8 +1356,19 @@
     pushUint32(totalSec * 1000);
     pushUint32(totalSec * 1000);
     pushUint32(Math.round(result.total_distance_m * 100));
+    pushUint32(sess.total_cycles !== undefined ? sess.total_cycles : 4294967295);
+    pushUint16(sess.total_calories !== undefined ? sess.total_calories : 600);
     pushUint16(Math.round(avgSpd * 1000));
     pushUint16(Math.round((result.max_speed_kmh / 3.6) * 1000));
+    pushByte(sess.avg_heart_rate !== undefined ? sess.avg_heart_rate : 140);
+    pushByte(sess.max_heart_rate !== undefined ? sess.max_heart_rate : 155);
+    pushByte(sess.avg_cadence !== undefined ? sess.avg_cadence : 255);
+    pushByte(sess.max_cadence !== undefined ? sess.max_cadence : 255);
+    pushByte(sess.raw_avg_fractional_cadence !== undefined ? sess.raw_avg_fractional_cadence : 255);
+    pushUint16(sess.raw_avg_step_length !== undefined ? sess.raw_avg_step_length : 65535);
+    pushUint16(sess.raw_avg_vertical_oscillation !== undefined ? sess.raw_avg_vertical_oscillation : 65535);
+    pushUint16(sess.raw_avg_stance_time !== undefined ? sess.raw_avg_stance_time : 65535);
+    pushUint16(sess.raw_avg_vertical_ratio !== undefined ? sess.raw_avg_vertical_ratio : 65535);
     pushUint16(0); // first_lap_index: 0
     pushUint16(result.laps.length); // num_laps
     pushByte(1); // Running

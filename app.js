@@ -303,12 +303,11 @@
         const minHr = hrs.length ? Math.min(...hrs) : '--';
         const maxHr = hrs.length ? Math.max(...hrs) : '--';
 
-        // Count leading stationary
+        // Count leading stationary (< 0.3 m/s)
         let statCount = 0;
         for (let i = 0; i < recs.length; i++) {
           const s = recs[i].speed || 0;
-          const cad = recs[i].cadence || 0;
-          if (s < 0.3 && cad < 40) statCount++;
+          if (s < 0.3) statCount++;
           else break;
         }
 
